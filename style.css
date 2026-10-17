@@ -9,6 +9,7 @@
   --danger: #ff3b30;
   --radius: 14px;
   --safe-b: env(safe-area-inset-bottom, 0px);
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   color-scheme: light dark;
 }
 
@@ -32,7 +33,7 @@
 html, body { margin: 0; background: var(--bg); color: var(--fg); }
 
 body {
-  font: 17px/1.35 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font: 17px/1.35 "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   padding: env(safe-area-inset-top, 0px) 16px calc(96px + var(--safe-b));
   max-width: 560px;
@@ -249,3 +250,11 @@ input::-webkit-calendar-picker-indicator { display: none !important; }
 .rrow .rdel { width: 32px; height: 32px; display: grid; place-items: center; color: var(--muted); }
 body.adding .toast { bottom: calc(190px + var(--safe-b)); }
 #bar .rrow .rdel { flex: 0 0 32px; width: 32px; height: 32px; border-radius: 0; font-size: inherit; }
+
+/* SF Mono for figures: dates, weights, quantities */
+#weight, #date, #amount, .row .rdate, .row .rqty, .gmeta, .rrow .rmeta, .step .val.num, .chips button { font-family: var(--mono); letter-spacing: 0; }
+#weight, #date, #amount { font-weight: 500; }
+.step .val.num { font-weight: 500; font-size: 21px; }
+.row .rdate { font-size: 16px; }
+.rrow .rmeta, .gmeta { font-size: 13px; }
+

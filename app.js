@@ -135,7 +135,7 @@
       nm.textContent = g.name;
       const meta = document.createElement('span');
       meta.className = 'gmeta';
-      meta.textContent = `${g.weight ? g.weight + ' ' + g.unit + ' · ' : ''}총 ${g.total}개`;
+      meta.textContent = `${g.weight ? g.weight + g.unit + ' · ' : ''}총 ${g.total}x`;
       head.append(nm, meta);
       box.appendChild(head);
 
@@ -146,7 +146,7 @@
           `<span class="rdate"></span><span class="rqty"></span>` +
           `<button type="button" class="rdel" aria-label="삭제"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>`;
         row.querySelector('.rdate').textContent = iso(e.y, e.m, e.d);
-        row.querySelector('.rqty').textContent = `${e.amount}개`;
+        row.querySelector('.rqty').textContent = `${e.amount}x`;
         row.querySelector('.rdel').dataset.id = e.id;
         box.appendChild(row);
       }
@@ -168,7 +168,7 @@
       row.className = 'rrow';
       row.innerHTML = '<span class="rname"></span><span class="rmeta"></span><button type="button" class="rdel" aria-label="삭제"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>';
       row.querySelector('.rname').textContent = e.name + (e.weight ? ` ${e.weight}${e.unit}` : '');
-      row.querySelector('.rmeta').textContent = `${iso(e.y, e.m, e.d).slice(2)} · ${e.amount}개`;
+      row.querySelector('.rmeta').textContent = `${iso(e.y, e.m, e.d).slice(2)} · ${e.amount}x`;
       row.querySelector('.rdel').dataset.id = e.id;
       return row;
     }));
@@ -202,15 +202,15 @@
 
   // ---------- actions ----------
   const STEPS = ['name', 'weight', 'date', 'amount'].map((k, i) => ({ i, box: $('s-' + k), val: $('v-' + k), input: el[k] }));
-  const PLACEHOLDER = ['품목 이름', '무게 없음', '유통기한', '1개'];
+  const PLACEHOLDER = ['품목 이름', '무게 없음', '유통기한', '1x'];
   let step = 0;        // furthest revealed step
   let editing = null;  // earlier step reopened by tapping its text
 
   function stepText(i) {
     if (i === 0) return el.name.value.trim();
-    if (i === 1) { const w = el.weight.value.trim(); return w ? `${w} ${state.unit}` : ''; }
+    if (i === 1) { const w = el.weight.value.trim(); return w ? `${w}${state.unit}` : ''; }
     if (i === 2) { const cd = currentDate(); return cd.complete && cd.valid ? `${cd.y}.${pad(cd.m)}.${pad(cd.d)}` : ''; }
-    return el.amount.value ? `${el.amount.value}개` : '';
+    return el.amount.value ? `${el.amount.value}x` : '';
   }
 
   function showSteps(focus) {
@@ -221,6 +221,7 @@
       const t = stepText(s.i);
       s.val.textContent = t || PLACEHOLDER[s.i];
       s.val.classList.toggle('empty', !t);
+      s.val.classList.toggle('num', s.i > 0 && !!t);
     }
     if (focus) {
       STEPS[act].input.focus({ preventScroll: true });
@@ -255,7 +256,7 @@
     editing = null;
     step = 2;
     showSteps(true);
-    renderPreview(`✓ ${iso(cd.y, cd.m, cd.d)} · ${amount}개 추가됨`);
+    renderPreview(`✓ ${iso(cd.y, cd.m, cd.d)} · ${amount}x 추가됨`);
   }
 
   function resetForm() {
@@ -317,7 +318,7 @@
     const [removed] = state.entries.splice(idx, 1);
     save();
     renderList();
-    toast(`삭제됨 ${iso(removed.y, removed.m, removed.d)} · ${removed.amount}개`, () => {
+    toast(`삭제됨 ${iso(removed.y, removed.m, removed.d)} · ${removed.amount}x`, () => {
       state.entries.splice(idx, 0, removed);
       save();
       renderList(removed.id);
