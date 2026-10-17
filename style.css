@@ -9,7 +9,7 @@
   --danger: #ff3b30;
   --radius: 14px;
   --safe-b: env(safe-area-inset-bottom, 0px);
-  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --mono: "SF Mono", SFMono, "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
   color-scheme: light dark;
 }
 
