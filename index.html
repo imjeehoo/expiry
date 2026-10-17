@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
@@ -8,8 +8,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Expiry">
-  <title>Expiry</title>
+  <meta name="apple-mobile-web-app-title" content="유통기한">
+  <title>유통기한</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-180.png">
@@ -17,67 +17,69 @@
 </head>
 <body>
   <header class="top">
-    <h1>Expiry</h1>
+    <h1>유통기한</h1>
     <div class="actions" style="display:flex;gap:8px">
-      <label id="import" class="pill ghost" role="button" style="position:relative;display:inline-flex;align-items:center;overflow:hidden">Import
+      <label id="import" class="pill ghost" role="button" style="position:relative;display:inline-flex;align-items:center;overflow:hidden">가져오기
         <input id="file" type="file" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
       </label>
-      <button id="export" class="pill" type="button" disabled>Export</button>
+      <button id="export" class="pill" type="button" disabled>내보내기</button>
     </div>
   </header>
 
   <main>
     <form id="form" autocomplete="off" novalidate>
-      <section class="card">
-        <label class="field">
-          <span class="label">Name</span>
-          <input id="name" type="text" list="names" placeholder="Item name"
-                 autocapitalize="sentences" autocorrect="off" spellcheck="false" enterkeyhint="next">
-        </label>
-        <div class="field">
-          <label class="label" for="weight">Weight</label>
-          <div class="weight-row">
-            <input id="weight" type="text" inputmode="decimal" placeholder="0" enterkeyhint="next">
-            <div id="units" class="seg" role="radiogroup" aria-label="Unit"></div>
+      <div id="steps" class="steps">
+        <section class="step" id="s-name">
+          <span class="label">이름</span>
+          <button type="button" class="val" id="v-name"></button>
+          <div class="edit">
+            <input id="name" type="text" list="names" placeholder="품목 이름"
+                   autocapitalize="sentences" autocorrect="off" spellcheck="false" enterkeyhint="next" aria-label="이름">
           </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div id="years" class="chips" role="radiogroup" aria-label="Year"></div>
-        <div class="lot">
-          <div class="field">
-            <span id="order" class="label">Expiry · MM.DD</span>
+        </section>
+        <section class="step" id="s-weight" hidden>
+          <span class="label">무게</span>
+          <button type="button" class="val" id="v-weight"></button>
+          <div class="edit weight-row">
+            <input id="weight" type="text" inputmode="decimal" placeholder="0" enterkeyhint="next" aria-label="무게">
+            <div id="units" class="seg" role="radiogroup" aria-label="단위"></div>
+          </div>
+        </section>
+        <div id="years" class="chips" role="radiogroup" aria-label="연도" hidden></div>
+        <section class="step" id="s-date" hidden>
+          <span class="label">유통기한 · 월.일</span>
+          <button type="button" class="val" id="v-date"></button>
+          <div class="edit">
             <input id="date" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="MM.DD"
-                   enterkeyhint="next" aria-label="Expiry date">
+                   enterkeyhint="next" aria-label="유통기한">
+            <p id="preview" class="preview">&nbsp;</p>
           </div>
-          <label class="field qty">
-            <span class="label">Amount</span>
-            <input id="amount" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="1" enterkeyhint="done">
-          </label>
-          <button id="add" class="add" type="submit" aria-label="Add">
-            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-          </button>
-        </div>
-        <p id="preview" class="preview">&nbsp;</p>
-      </section>
+        </section>
+        <section class="step" id="s-amount" hidden>
+          <span class="label">수량</span>
+          <button type="button" class="val" id="v-amount"></button>
+          <div class="edit">
+            <input id="amount" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="1" enterkeyhint="done" aria-label="수량">
+          </div>
+        </section>
+      </div>
     </form>
 
     <div class="list-head">
-      <span id="count">No entries</span>
-      <button id="clear" class="link" type="button" hidden>Clear all</button>
+      <span id="count">기록 없음</span>
+      <button id="clear" class="link" type="button" hidden>모두 삭제</button>
     </div>
     <section id="list"></section>
   </main>
 
   <div id="bar" class="bar" hidden>
-    <button id="newItem" class="ghost" type="button">New item</button>
-    <button id="primary" class="primary" type="button">Next</button>
+    <button id="newItem" class="ghost" type="button">새 품목</button>
+    <button id="primary" class="primary" type="button">다음</button>
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden>
     <span id="toastText"></span>
-    <button id="toastAction" class="link" type="button" hidden>Undo</button>
+    <button id="toastAction" class="link" type="button" hidden>되돌리기</button>
   </div>
 
   <datalist id="names"></datalist>

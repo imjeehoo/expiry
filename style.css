@@ -99,7 +99,7 @@ input::-webkit-calendar-picker-indicator { display: none !important; }
 .seg button[aria-checked="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 
 .chips {
-  display: flex; gap: 6px; padding: 12px 14px 6px; margin: 0 -14px;
+  display: flex; gap: 6px; padding: 12px 16px 6px; margin: 0 -16px;
   overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
 .chips::-webkit-scrollbar { display: none; }
@@ -193,3 +193,18 @@ input::-webkit-calendar-picker-indicator { display: none !important; }
   max-width: calc(100% - 32px);
 }
 .toast .link { color: var(--invert-fg); text-decoration: underline; }
+
+/* one-field-at-a-time flow: newest step on top, finished steps collapse to text */
+.steps { display: flex; flex-direction: column-reverse; margin-bottom: 8px; }
+.step { padding: 14px 0 12px; border-bottom: 1px solid var(--line); animation: stepin .28s ease-out; }
+@keyframes stepin { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+.step .val { display: block; width: 100%; text-align: left; font-size: 22px; font-weight: 600; padding: 2px 0; letter-spacing: -.01em; }
+.step .val.empty { color: var(--muted); font-weight: 400; }
+.step .edit { display: none; }
+.step.active .edit { display: block; }
+.step.active .val { display: none; }
+.step.active .weight-row { display: flex; }
+.step.active .label { color: var(--fg); }
+.step.active input { font-size: 30px; font-weight: 600; letter-spacing: -.02em; padding: 6px 0; border-bottom: 2px solid var(--fg); }
+.step.active .weight-row input { flex: 1; }
+.step .preview { padding: 8px 0 0; }

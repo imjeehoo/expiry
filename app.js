@@ -4,7 +4,7 @@
   const $ = (id) => document.getElementById(id);
   const el = {
     form: $('form'), name: $('name'), weight: $('weight'), units: $('units'),
-    years: $('years'), order: $('order'), date: $('date'), amount: $('amount'),
+    years: $('years'), date: $('date'), amount: $('amount'),
     preview: $('preview'), list: $('list'), count: $('count'), clear: $('clear'),
     exportBtn: $('export'), importBtn: $('import'), file: $('file'), bar: $('bar'), primary: $('primary'), newItem: $('newItem'),
     toast: $('toast'), toastText: $('toastText'), toastAction: $('toastAction'), names: $('names'),
@@ -109,15 +109,15 @@
   function relative(y, m, d) {
     const t = today();
     const days = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(t.y, t.m - 1, t.d)) / 86400000);
-    if (days === 0) return 'today';
-    if (days < 0) return `expired ${-days} day${days === -1 ? '' : 's'} ago`;
-    if (days < 60) return `in ${days} day${days === 1 ? '' : 's'}`;
+    if (days === 0) return '오늘';
+    if (days < 0) return `${-days}일 지남`;
+    if (days < 60) return `${days}일 후`;
     const months = (y - t.y) * 12 + (m - t.m) - (d < t.d ? 1 : 0);
-    if (months < 24) return `in ${months} months`;
-    return `in ${Math.floor(months / 12)} years`;
+    if (months < 24) return `${months}개월 후`;
+    return `${Math.floor(months / 12)}년 후`;
   }
 
-  const fmtLong = new Intl.DateTimeFormat(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+  const fmtLong = new Intl.DateTimeFormat('ko-KR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
 
   // ---------- rendering ----------
   function renderUnits() {
@@ -160,26 +160,22 @@
     }
   }
 
-  function renderOrder() {
-    el.date.placeholder = 'MM.DD';
-  }
-
   function renderPreview(msg) {
     el.preview.classList.remove('err');
     if (msg) { el.preview.textContent = msg; return; }
     const cd = currentDate();
     if (!cd.complete) {
       el.preview.innerHTML = cd.empty && document.activeElement === el.date
-        ? `Type ${state.order === 'md' ? 'month then day' : 'day then month'}, e.g. ${state.order === 'md' ? '1225' : '2512'}`
+        ? '월, 일 순서로 입력 · 예: 1225'
         : '&nbsp;';
       return;
     }
     if (!cd.valid) {
       el.preview.classList.add('err');
-      el.preview.textContent = `${iso(cd.y, cd.m, cd.d)} doesn’t exist`;
+      el.preview.textContent = `${iso(cd.y, cd.m, cd.d)} 존재하지 않는 날짜예요`;
       return;
     }
-    el.preview.textContent = `${fmtLong.format(new Date(Date.UTC(cd.y, cd.m - 1, cd.d)))} · ${relative(cd.y, cd.m, cd.d)}${cd.auto ? '' : ' · year fixed'}`;
+    el.preview.textContent = `${fmtLong.format(new Date(Date.UTC(cd.y, cd.m - 1, cd.d)))} · ${relative(cd.y, cd.m, cd.d)}${cd.auto ? '' : ' · 연도 고정'}`;
   }
 
   const groupKey = (e) => `${e.name}\u0000${e.weight}\u0000${e.unit}`;
@@ -198,7 +194,7 @@
       g.last = idx;
       g.total += e.amount;
     });
-    el.count.textContent = n === 0 ? 'No entries' : `${n} entr${n === 1 ? 'y' : 'ies'} · ${groups.size} item${groups.size === 1 ? '' : 's'}`;
+    el.count.textContent = n === 0 ? '기록 없음' : `${n}건 · ${groups.size}개 품목`;
 
     const curKey = groupKey({ name: el.name.value.trim(), weight: el.weight.value.trim(), unit: state.unit });
     const frag = document.createDocumentFragment();
@@ -215,7 +211,7 @@
       nm.textContent = g.name;
       const meta = document.createElement('span');
       meta.className = 'gmeta';
-      meta.textContent = `${g.weight ? g.weight + ' ' + g.unit + ' · ' : ''}${g.total} total`;
+      meta.textContent = `${g.weight ? g.weight + ' ' + g.unit + ' · ' : ''}총 ${g.total}개`;
       head.append(nm, meta);
       box.appendChild(head);
 
@@ -224,16 +220,16 @@
         row.className = 'row' + (e.id === flashId ? ' flash' : '');
         row.innerHTML =
           `<span class="rdate"></span><span class="rqty"></span>` +
-          `<button type="button" class="rdel" aria-label="Delete"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>`;
+          `<button type="button" class="rdel" aria-label="삭제"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>`;
         row.querySelector('.rdate').textContent = iso(e.y, e.m, e.d);
-        row.querySelector('.rqty').textContent = `× ${e.amount}`;
+        row.querySelector('.rqty').textContent = `${e.amount}개`;
         row.querySelector('.rdel').dataset.id = e.id;
         box.appendChild(row);
       }
       frag.appendChild(box);
     });
     el.list.replaceChildren(frag);
-    if (n === 0) el.list.innerHTML = '<p class="empty">Entries you add appear here.</p>';
+    if (n === 0) el.list.innerHTML = '<p class="empty">추가한 기록이 여기에 표시돼요.</p>';
   }
 
   function renderNames() {
@@ -263,11 +259,45 @@
   }
 
   // ---------- actions ----------
+  const STEPS = ['name', 'weight', 'date', 'amount'].map((k, i) => ({ i, box: $('s-' + k), val: $('v-' + k), input: el[k] }));
+  const PLACEHOLDER = ['품목 이름', '무게 없음', '유통기한', '1개'];
+  let step = 0;        // furthest revealed step
+  let editing = null;  // earlier step reopened by tapping its text
+
+  function stepText(i) {
+    if (i === 0) return el.name.value.trim();
+    if (i === 1) { const w = el.weight.value.trim(); return w ? `${w} ${state.unit}` : ''; }
+    if (i === 2) { const cd = currentDate(); return cd.complete && cd.valid ? `${cd.y}.${pad(cd.m)}.${pad(cd.d)}` : ''; }
+    return el.amount.value ? `${el.amount.value}개` : '';
+  }
+
+  function showSteps(focus) {
+    const act = editing ?? step;
+    for (const s of STEPS) {
+      s.box.hidden = s.i > step;
+      s.box.classList.toggle('active', s.i === act);
+      const t = stepText(s.i);
+      s.val.textContent = t || PLACEHOLDER[s.i];
+      s.val.classList.toggle('empty', !t);
+    }
+    el.years.hidden = step < 2;
+    if (focus) {
+      STEPS[act].input.focus();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    updatePrimary();
+  }
+
+  function advance(to) {
+    if (editing !== null) editing = null; else step = Math.max(step, to);
+    showSteps(true);
+  }
+
   function addLot() {
     const name = el.name.value.trim();
-    if (!name) { el.name.focus(); shake(el.name.closest('.card')); return; }
+    if (!name) { editing = 0; showSteps(true); shake(STEPS[0].box); return; }
     const cd = currentDate();
-    if (!cd.complete || !cd.valid) { el.date.focus(); shake(el.date.closest('.field')); return; }
+    if (!cd.complete || !cd.valid) { editing = 2; showSteps(true); shake(STEPS[2].box); return; }
     const amount = parseInt(el.amount.value, 10) || 1;
     const weight = el.weight.value.trim();
 
@@ -280,10 +310,11 @@
 
     el.date.value = '';
     el.amount.value = '';
-    el.date.focus();
+    editing = null;
+    step = 2;
     renderYears();
-    renderPreview(`✓ Added ${iso(cd.y, cd.m, cd.d)} × ${amount}`);
-    updatePrimary();
+    showSteps(true);
+    renderPreview(`✓ ${iso(cd.y, cd.m, cd.d)} · ${amount}개 추가됨`);
   }
 
   function newItem() {
@@ -292,24 +323,27 @@
     el.date.value = '';
     el.amount.value = '';
     yearLock = null;
+    step = 0;
+    editing = null;
     renderYears();
     renderPreview();
     renderList();
-    el.name.focus();
+    showSteps(true);
   }
 
   function next(from) {
-    if (from === el.name) el.weight.focus();
-    else if (from === el.weight) el.date.focus();
+    if (from === el.name) {
+      if (!el.name.value.trim()) { shake(STEPS[0].box); return; }
+      advance(1);
+    } else if (from === el.weight) advance(2);
     else if (from === el.date) {
       const cd = currentDate();
-      if (cd.complete && cd.valid) el.amount.focus(); else shake(el.date.closest('.field'));
+      if (cd.complete && cd.valid) advance(3); else shake(STEPS[2].box);
     } else addLot();
   }
 
   function updatePrimary() {
-    const a = document.activeElement;
-    el.primary.textContent = a === el.amount ? 'Add' : 'Next';
+    el.primary.textContent = (editing ?? step) === 3 ? '추가' : '다음';
   }
 
   function deleteEntry(id) {
@@ -318,7 +352,7 @@
     const [removed] = state.entries.splice(idx, 1);
     save();
     renderList();
-    toast(`Deleted ${iso(removed.y, removed.m, removed.d)} × ${removed.amount}`, () => {
+    toast(`삭제됨 ${iso(removed.y, removed.m, removed.d)} · ${removed.amount}개`, () => {
       state.entries.splice(idx, 0, removed);
       save();
       renderList(removed.id);
@@ -332,11 +366,12 @@
     el.weight.value = e.weight;
     state.unit = e.unit;
     yearLock = null;
+    step = 2;
+    editing = null;
     renderUnits();
     renderYears();
     renderList();
-    el.date.focus();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showSteps(true);
   }
 
   function stamp() {
@@ -346,7 +381,7 @@
 
   async function exportXlsx() {
     if (!state.entries.length) return;
-    const rows = [['Name', 'Weight', 'Unit', 'Expiry', 'Amount']];
+    const rows = [['이름', '무게', '단위', '유통기한', '수량']];
     // Items stay in the order they were first entered; each item's dates run earliest first.
     const order = new Map();
     state.entries.forEach((e) => { const k = groupKey(e); if (!order.has(k)) order.set(k, order.size); });
@@ -361,7 +396,7 @@
       else if (numeric && unit === 'L') { w = Math.round(w * 1000 * 100) / 100; unit = 'ml'; }
       rows.push([e.name, numeric ? w : e.weight, unit, { date: [e.y, e.m, e.d] }, e.amount]);
     }
-    const blob = XLSX.build(rows, { sheetName: 'Expiry', widths: [32, 10, 7, 13, 9] });
+    const blob = XLSX.build(rows, { sheetName: '유통기한', widths: [32, 10, 7, 13, 9] });
     const filename = `expiry-${stamp()}.xlsx`;
     const file = new File([blob], filename, { type: blob.type });
 
@@ -381,7 +416,7 @@
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
-    toast(`Saved ${filename}`);
+    toast(`${filename} 저장됨`);
   }
 
   // ---------- import ----------
@@ -441,7 +476,7 @@
     try {
       const rows = await XLSX.parse(await file.arrayBuffer());
       const res = rowsToEntries(rows);
-      if (!res) { toast('No Name / Expiry columns found'); return; }
+      if (!res) { toast('이름 / 유통기한 열을 찾을 수 없어요'); return; }
       const seen = new Set(state.entries.map((e) => `${groupKey(e)}\u0000${iso(e.y, e.m, e.d)}\u0000${e.amount}`));
       const fresh = res.entries.filter((e) => {
         const k = `${groupKey(e)}\u0000${iso(e.y, e.m, e.d)}\u0000${e.amount}`;
@@ -449,7 +484,7 @@
         seen.add(k);
         return true;
       });
-      if (!fresh.length) { toast(res.skipped ? `Nothing imported · ${res.skipped} skipped` : 'Nothing new to import'); return; }
+      if (!fresh.length) { toast(res.skipped ? `가져온 항목 없음 · ${res.skipped}건 건너뜀` : '새로 가져올 항목이 없어요'); return; }
       const before = state.entries.length;
       const prevNames = JSON.stringify(state.names);
       state.entries.push(...fresh);
@@ -458,8 +493,8 @@
       renderNames();
       renderList();
       const dup = res.entries.length - fresh.length;
-      const note = [dup && `${dup} duplicate`, res.skipped && `${res.skipped} skipped`].filter(Boolean).join(', ');
-      toast(`Imported ${fresh.length}${note ? ` · ${note}` : ''}`, () => {
+      const note = [dup && `중복 ${dup}건`, res.skipped && `${res.skipped}건 건너뜀`].filter(Boolean).join(', ');
+      toast(`${fresh.length}건 가져옴${note ? ` · ${note}` : ''}`, () => {
         state.entries.splice(before, fresh.length);
         state.names = JSON.parse(prevNames);
         save();
@@ -467,7 +502,7 @@
         renderList();
       });
     } catch (err) {
-      toast('Could not read that file');
+      toast('파일을 읽을 수 없어요');
     }
   }
 
@@ -476,11 +511,11 @@
   const keepFocus = (e) => {
     if (document.activeElement && document.activeElement.tagName === 'INPUT') e.preventDefault();
   };
-  for (const n of [el.units, el.years, el.order, el.bar, $('add'), el.toast]) n.addEventListener('mousedown', keepFocus);
+  for (const n of [el.units, el.years, el.bar, el.toast]) n.addEventListener('mousedown', keepFocus);
 
   el.form.addEventListener('submit', (e) => { e.preventDefault(); addLot(); });
 
-  for (const input of [el.name, el.weight, el.date]) {
+  for (const input of [el.name, el.weight, el.date, el.amount]) {
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); next(input); }
     });
@@ -508,8 +543,7 @@
     renderYears();
     renderPreview();
     if (r.complete && e.inputType && e.inputType.startsWith('insert')) {
-      const cd = currentDate();
-      if (cd.valid) el.amount.focus();
+      if (currentDate().valid) next(el.date);
     }
   });
 
@@ -539,9 +573,10 @@
     yearLock = yearLock === y ? null : y;
     renderYears();
     renderPreview();
-    if (document.activeElement !== el.amount) {
+    showSteps(false);
+    if ((editing ?? step) === 2) {
       const cd = currentDate();
-      if (cd.complete && cd.valid) el.amount.focus(); else el.date.focus();
+      if (cd.complete && cd.valid) next(el.date); else el.date.focus();
     }
   });
 
@@ -553,13 +588,17 @@
   });
 
   el.clear.addEventListener('click', () => {
-    if (!confirm(`Delete all ${state.entries.length} entries?`)) return;
+    if (!confirm(`기록 ${state.entries.length}건을 모두 삭제할까요?`)) return;
     const backup = state.entries;
     state.entries = [];
     save();
     renderList();
-    toast('Cleared', () => { state.entries = backup; save(); renderList(); });
+    toast('모두 삭제됨', () => { state.entries = backup; save(); renderList(); });
   });
+
+  for (const s of STEPS) {
+    s.val.addEventListener('click', () => { editing = s.i; showSteps(true); });
+  }
 
   el.exportBtn.addEventListener('click', exportXlsx);
   el.file.addEventListener('change', () => {
@@ -610,7 +649,8 @@
   // ---------- init ----------
   renderUnits();
   renderYears();
-  renderOrder();
+  showSteps(false);
+  el.name.focus({ preventScroll: true });
   renderNames();
   renderList();
   renderPreview();

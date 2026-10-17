@@ -1,7 +1,7 @@
 {
-  "name": "Expiry",
-  "short_name": "Expiry",
-  "description": "Fast expiry-date logging with Excel export.",
+  "name": "유통기한",
+  "short_name": "유통기한",
+  "description": "빠른 유통기한 기록과 엑셀 내보내기",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
