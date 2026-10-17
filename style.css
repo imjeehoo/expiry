@@ -184,8 +184,7 @@ input::-webkit-calendar-picker-indicator { display: none !important; }
 .bar .primary { flex: 1; max-width: 200px; background: var(--fg); color: var(--invert-fg); }
 
 .toast {
-  position: fixed; left: 50%; bottom: calc(80px + var(--safe-b)); z-index: 20;
-  transform: translateX(-50%);
+  position: fixed; left: 0; right: 0; margin: 0 auto; width: max-content; bottom: calc(80px + var(--safe-b)); z-index: 20;
   display: flex; gap: 16px; align-items: center;
   padding: 10px 16px; border-radius: 12px;
   background: var(--fg); color: var(--invert-fg); font-size: 15px;
