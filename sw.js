@@ -1,5 +1,5 @@
-// Offline app shell: serve from cache, refresh the cache in the background.
-const CACHE = 'expiry-v2';
+// Offline app shell: network first (so updates land immediately), cache when offline.
+const CACHE = 'expiry-v3';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'xlsx.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -17,12 +17,10 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
   e.respondWith(
-    caches.open(CACHE).then(async (cache) => {
-      const cached = await cache.match(e.request, { ignoreSearch: true });
-      const fresh = fetch(e.request)
+    caches.open(CACHE).then((cache) =>
+      fetch(e.request, { cache: 'no-cache' })
         .then((res) => { if (res.ok) cache.put(e.request, res.clone()); return res; })
-        .catch(() => cached);
-      return cached || fresh;
-    })
+        .catch(() => cache.match(e.request, { ignoreSearch: true }))
+    )
   );
 });

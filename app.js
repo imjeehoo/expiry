@@ -559,7 +559,6 @@
   });
 
   el.exportBtn.addEventListener('click', exportXlsx);
-  el.importBtn.addEventListener('click', () => el.file.click());
   el.file.addEventListener('change', () => {
     const f = el.file.files[0];
     el.file.value = '';

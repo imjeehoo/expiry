@@ -19,11 +19,11 @@
   <header class="top">
     <h1>Expiry</h1>
     <div class="actions">
-      <button id="import" class="pill ghost" type="button">Import</button>
+      <label id="import" class="pill ghost" role="button">Import
+        <input id="file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+      </label>
       <button id="export" class="pill" type="button" disabled>Export</button>
     </div>
-    <input id="file" type="file" hidden
-           accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
   </header>
 
   <main>
