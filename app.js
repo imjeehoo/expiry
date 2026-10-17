@@ -4,7 +4,7 @@
   const $ = (id) => document.getElementById(id);
   const el = {
     form: $('form'), name: $('name'), weight: $('weight'), units: $('units'),
-    home: $('home'), addView: $('addView'), homeBar: $('homeBar'), openAdd: $('openAdd'), back: $('back'), done: $('done'), newItem: $('newItem'), date: $('date'), amount: $('amount'),
+    home: $('home'), addView: $('addView'), homeBar: $('homeBar'), openAdd: $('openAdd'), back: $('back'), newItem: $('newItem'), date: $('date'), amount: $('amount'),
     preview: $('preview'), list: $('list'), count: $('count'), clear: $('clear'),
     exportBtn: $('export'), importBtn: $('import'), file: $('file'), bar: $('bar'), primary: $('primary'),
     toast: $('toast'), toastText: $('toastText'), toastAction: $('toastAction'), names: $('names'),
@@ -522,7 +522,6 @@
   el.primary.addEventListener('click', () => next(document.activeElement));
   el.openAdd.addEventListener('click', () => openAdd());
   el.back.addEventListener('click', goHome);
-  el.done.addEventListener('click', goHome);
   el.newItem.addEventListener('click', () => { resetForm(); showSteps(true); });
   window.addEventListener('hashchange', route);
 
