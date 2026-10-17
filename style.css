@@ -57,6 +57,9 @@ button:disabled { opacity: .35; cursor: default; }
   font-size: 15px; font-weight: 600;
 }
 
+.actions { display: flex; gap: 8px; }
+.pill.ghost { background: var(--chip); color: var(--fg); }
+
 .card {
   background: var(--card);
   border-radius: var(--radius);

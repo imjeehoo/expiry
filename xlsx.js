@@ -182,5 +182,117 @@
     return zip(Object.entries(files).map(([name, xml]) => ({ name, data: enc.encode(xml) })));
   }
 
-  global.XLSX = { build };
+  // ---------- reader ----------
+  async function inflateRaw(bytes) {
+    const ds = new DecompressionStream('deflate-raw');
+    const out = new Response(new Blob([bytes]).stream().pipeThrough(ds));
+    return new Uint8Array(await out.arrayBuffer());
+  }
+
+  // Returns { name: Uint8Array } for every entry in the zip (stored or deflated).
+  async function unzip(buf) {
+    const u8 = new Uint8Array(buf);
+    const dv = new DataView(buf);
+    let e = u8.length - 22;
+    while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+    if (e < 0) throw new Error('Not a zip file');
+    const count = dv.getUint16(e + 10, true);
+    let p = dv.getUint32(e + 16, true);
+    const dec = new TextDecoder();
+    const out = {};
+    for (let i = 0; i < count; i++) {
+      const method = dv.getUint16(p + 10, true);
+      const csize = dv.getUint32(p + 20, true);
+      const nlen = dv.getUint16(p + 28, true);
+      const xlen = dv.getUint16(p + 30, true);
+      const clen = dv.getUint16(p + 32, true);
+      const lho = dv.getUint32(p + 42, true);
+      const name = dec.decode(u8.subarray(p + 46, p + 46 + nlen));
+      const start = lho + 30 + dv.getUint16(lho + 26, true) + dv.getUint16(lho + 28, true);
+      const raw = u8.subarray(start, start + csize);
+      out[name] = method === 0 ? raw : method === 8 ? await inflateRaw(raw) : null;
+      p += 46 + nlen + xlen + clen;
+    }
+    return out;
+  }
+
+  const BUILTIN_DATE_FMTS = new Set([14, 15, 16, 17, 18, 19, 20, 21, 22, 45, 46, 47]);
+  const isDateFormat = (code) => /[ymd]/i.test(code.replace(/"[^"]*"|\\.|\[[^\]]*\]/g, ''));
+
+  function colIndex(ref) {
+    let n = 0;
+    for (const ch of ref.replace(/\d/g, '')) n = n * 26 + ch.charCodeAt(0) - 64;
+    return n - 1;
+  }
+
+  function fromSerial(n) {
+    const t = new Date(Date.UTC(1899, 11, 30) + Math.floor(n) * 86400000);
+    return { date: [t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate()] };
+  }
+
+  // Reads the first sheet. Returns rows of strings / numbers / {date:[y,m,d]}.
+  async function parse(buf) {
+    const files = await unzip(buf);
+    const dec = new TextDecoder();
+    const xml = (name) => {
+      if (!files[name]) return null;
+      return new DOMParser().parseFromString(dec.decode(files[name]), 'application/xml');
+    };
+    const text = (n) => [...n.getElementsByTagName('t')].map((t) => t.textContent).join('');
+
+    const wb = xml('xl/workbook.xml');
+    if (!wb) throw new Error('Not an xlsx file');
+    const rels = xml('xl/_rels/workbook.xml.rels');
+    const first = wb.getElementsByTagName('sheet')[0];
+    const rid = first && (first.getAttribute('r:id') || first.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id'));
+    let target = 'worksheets/sheet1.xml';
+    for (const r of rels ? rels.getElementsByTagName('Relationship') : []) {
+      if (r.getAttribute('Id') === rid) target = r.getAttribute('Target');
+    }
+    const sheetPath = target.startsWith('/') ? target.slice(1) : 'xl/' + target;
+    const sheet = xml(sheetPath);
+    if (!sheet) throw new Error('Sheet not found');
+
+    const sst = xml('xl/sharedStrings.xml');
+    const shared = sst ? [...sst.getElementsByTagName('si')].map(text) : [];
+
+    const customFmt = {};
+    const styles = xml('xl/styles.xml');
+    if (styles) for (const f of styles.getElementsByTagName('numFmt')) customFmt[f.getAttribute('numFmtId')] = f.getAttribute('formatCode');
+    const xfIsDate = [];
+    if (styles) {
+      const xfs = styles.getElementsByTagName('cellXfs')[0];
+      for (const xf of xfs ? xfs.getElementsByTagName('xf') : []) {
+        const id = +xf.getAttribute('numFmtId');
+        xfIsDate.push(BUILTIN_DATE_FMTS.has(id) || (customFmt[id] !== undefined && isDateFormat(customFmt[id])));
+      }
+    }
+
+    const rows = [];
+    for (const row of sheet.getElementsByTagName('row')) {
+      const r0 = +row.getAttribute('r') - 1;
+      const cells = [];
+      for (const c of row.getElementsByTagName('c')) {
+        const ref = c.getAttribute('r');
+        const type = c.getAttribute('t');
+        const vEl = c.getElementsByTagName('v')[0];
+        const v = vEl ? vEl.textContent : null;
+        let val = null;
+        if (type === 'inlineStr') val = text(c);
+        else if (v === null) val = null;
+        else if (type === 's') val = shared[+v] ?? '';
+        else if (type === 'str' || type === 'e') val = v;
+        else if (type === 'b') val = v === '1' ? 1 : 0;
+        else {
+          const n = parseFloat(v);
+          val = xfIsDate[+c.getAttribute('s') || 0] ? fromSerial(n) : n;
+        }
+        cells[ref ? colIndex(ref) : cells.length] = val;
+      }
+      rows[isNaN(r0) ? rows.length : r0] = Array.from(cells, (x) => (x === undefined ? null : x));
+    }
+    return Array.from(rows, (r) => r || []);
+  }
+
+  global.XLSX = { build, parse };
 })(typeof window !== 'undefined' ? window : globalThis);

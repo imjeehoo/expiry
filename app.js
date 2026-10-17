@@ -6,7 +6,7 @@
     form: $('form'), name: $('name'), weight: $('weight'), units: $('units'),
     years: $('years'), order: $('order'), date: $('date'), amount: $('amount'),
     preview: $('preview'), list: $('list'), count: $('count'), clear: $('clear'),
-    exportBtn: $('export'), bar: $('bar'), primary: $('primary'), newItem: $('newItem'),
+    exportBtn: $('export'), importBtn: $('import'), file: $('file'), bar: $('bar'), primary: $('primary'), newItem: $('newItem'),
     toast: $('toast'), toastText: $('toastText'), toastAction: $('toastAction'), names: $('names'),
   };
 
@@ -371,6 +371,93 @@
     toast(`Saved ${filename}`);
   }
 
+  // ---------- import ----------
+  const HEADERS = {
+    name: /name|이름|품명|상품|제품/i,
+    weight: /weight|무게|중량|용량|규격/i,
+    unit: /^\s*unit|단위/i,
+    expiry: /expir|유통|소비|기한|date|날짜/i,
+    amount: /amount|qty|quantity|count|개수|갯수|수량/i,
+  };
+
+  function parseWeight(v, fallbackUnit) {
+    if (v === null || v === undefined || v === '') return { weight: '', unit: fallbackUnit };
+    if (typeof v === 'number') return { weight: String(v), unit: fallbackUnit };
+    const m = String(v).trim().match(/^([\d.,]+)\s*(kg|g|ml|l)?$/i);
+    if (!m) return { weight: String(v).trim(), unit: fallbackUnit };
+    const u = m[2] ? (m[2].toLowerCase() === 'l' ? 'L' : m[2].toLowerCase()) : fallbackUnit;
+    return { weight: m[1].replace(',', '.'), unit: u };
+  }
+
+  function parseDateCell(v) {
+    if (v && v.date) return v.date;
+    const m = typeof v === 'string' && v.trim().match(/^(\d{4})\D+(\d{1,2})\D+(\d{1,2})\D*$/);
+    return m ? [+m[1], +m[2], +m[3]] : null;
+  }
+
+  // rows: header row + data rows (see XLSX.parse). Blank/incomplete rows are skipped.
+  function rowsToEntries(rows) {
+    const hi = rows.findIndex((r) => r.some((c) => typeof c === 'string' && HEADERS.name.test(c)) &&
+                                     r.some((c) => typeof c === 'string' && HEADERS.expiry.test(c)));
+    if (hi < 0) return null;
+    const col = {};
+    rows[hi].forEach((c, i) => {
+      if (typeof c !== 'string') return;
+      for (const k of Object.keys(HEADERS)) if (!(k in col) && HEADERS[k].test(c)) { col[k] = i; break; }
+    });
+    const out = [];
+    let skipped = 0;
+    for (const r of rows.slice(hi + 1)) {
+      if (!r.some((c) => c !== null && c !== '')) continue; // separator row
+      const name = String(r[col.name] ?? '').trim();
+      const dt = parseDateCell(r[col.expiry]);
+      if (!name || !dt || !realDate(dt[0], dt[1], dt[2])) { skipped++; continue; }
+      const { weight, unit } = parseWeight(r[col.weight], 'g');
+      const cu = col.unit !== undefined ? String(r[col.unit] ?? '').trim().toLowerCase() : '';
+      const u = UNITS.find((x) => x.toLowerCase() === cu) || unit;
+      out.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) + out.length,
+        name, weight, unit: u, y: dt[0], m: dt[1], d: dt[2],
+        amount: Math.max(1, Math.round(Number(r[col.amount])) || 1),
+      });
+    }
+    return { entries: out, skipped };
+  }
+
+  async function importFile(file) {
+    try {
+      const rows = await XLSX.parse(await file.arrayBuffer());
+      const res = rowsToEntries(rows);
+      if (!res) { toast('No Name / Expiry columns found'); return; }
+      const seen = new Set(state.entries.map((e) => `${groupKey(e)}\u0000${iso(e.y, e.m, e.d)}\u0000${e.amount}`));
+      const fresh = res.entries.filter((e) => {
+        const k = `${groupKey(e)}\u0000${iso(e.y, e.m, e.d)}\u0000${e.amount}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+      if (!fresh.length) { toast(res.skipped ? `Nothing imported · ${res.skipped} skipped` : 'Nothing new to import'); return; }
+      const before = state.entries.length;
+      const prevNames = JSON.stringify(state.names);
+      state.entries.push(...fresh);
+      for (const e of fresh) state.names[e.name] = { weight: e.weight, unit: e.unit };
+      save();
+      renderNames();
+      renderList();
+      const dup = res.entries.length - fresh.length;
+      const note = [dup && `${dup} duplicate`, res.skipped && `${res.skipped} skipped`].filter(Boolean).join(', ');
+      toast(`Imported ${fresh.length}${note ? ` · ${note}` : ''}`, () => {
+        state.entries.splice(before, fresh.length);
+        state.names = JSON.parse(prevNames);
+        save();
+        renderNames();
+        renderList();
+      });
+    } catch (err) {
+      toast('Could not read that file');
+    }
+  }
+
   // ---------- events ----------
   // Keep the keyboard up when tapping chips/buttons while typing.
   const keepFocus = (e) => {
@@ -472,6 +559,12 @@
   });
 
   el.exportBtn.addEventListener('click', exportXlsx);
+  el.importBtn.addEventListener('click', () => el.file.click());
+  el.file.addEventListener('change', () => {
+    const f = el.file.files[0];
+    el.file.value = '';
+    if (f) importFile(f);
+  });
   el.primary.addEventListener('click', () => next(document.activeElement));
   el.newItem.addEventListener('click', newItem);
 
@@ -525,5 +618,5 @@
   }
 
   // exposed for tests
-  window.__expiry = { parseDigits, predictYear };
+  window.__expiry = { parseDigits, predictYear, rowsToEntries };
 })();
