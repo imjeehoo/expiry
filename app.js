@@ -346,8 +346,12 @@
   async function exportXlsx() {
     if (!state.entries.length) return;
     const rows = [['Name', 'Weight', 'Unit', 'Expiry', 'Amount']];
+    // Items stay in the order they were first entered; each item's dates run earliest first.
+    const order = new Map();
+    state.entries.forEach((e) => { const k = groupKey(e); if (!order.has(k)) order.set(k, order.size); });
     const sorted = [...state.entries].sort((a, b) =>
-      iso(a.y, a.m, a.d).localeCompare(iso(b.y, b.m, b.d)) || a.name.localeCompare(b.name));
+      order.get(groupKey(a)) - order.get(groupKey(b)) ||
+      iso(a.y, a.m, a.d).localeCompare(iso(b.y, b.m, b.d)));
     for (const e of sorted) {
       let w = parseFloat(e.weight.replace(',', '.'));
       const numeric = /^\d+([.,]\d+)?$/.test(e.weight);
