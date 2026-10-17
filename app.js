@@ -4,7 +4,7 @@
   const $ = (id) => document.getElementById(id);
   const el = {
     form: $('form'), name: $('name'), weight: $('weight'), units: $('units'),
-    home: $('home'), addView: $('addView'), homeBar: $('homeBar'), openAdd: $('openAdd'), back: $('back'), newItem: $('newItem'), date: $('date'), amount: $('amount'),
+    home: $('home'), addView: $('addView'), homeBar: $('homeBar'), openAdd: $('openAdd'), back: $('back'), newItem: $('newItem'), recent: $('recent'), recentHead: $('recentHead'), recentList: $('recentList'), date: $('date'), amount: $('amount'),
     preview: $('preview'), list: $('list'), count: $('count'), clear: $('clear'),
     exportBtn: $('export'), importBtn: $('import'), file: $('file'), bar: $('bar'), primary: $('primary'),
     toast: $('toast'), toastText: $('toastText'), toastAction: $('toastAction'), names: $('names'),
@@ -154,6 +154,24 @@
     });
     el.list.replaceChildren(frag);
     if (n === 0) el.list.innerHTML = '<p class="empty">추가한 기록이 여기에 표시돼요.</p>';
+    renderRecent();
+  }
+
+  // Entries added since the add screen was opened, pinned above the bar for quick checking.
+  let recent = [];
+  function renderRecent() {
+    const rows = recent.map((id) => state.entries.find((e) => e.id === id)).filter(Boolean).reverse();
+    el.recent.hidden = rows.length === 0;
+    el.recentHead.textContent = `이번에 추가 ${rows.length}건`;
+    el.recentList.replaceChildren(...rows.map((e) => {
+      const row = document.createElement('div');
+      row.className = 'rrow';
+      row.innerHTML = '<span class="rname"></span><span class="rmeta"></span><button type="button" class="rdel" aria-label="삭제"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>';
+      row.querySelector('.rname').textContent = e.name + (e.weight ? ` ${e.weight}${e.unit}` : '');
+      row.querySelector('.rmeta').textContent = `${iso(e.y, e.m, e.d).slice(2)} · ${e.amount}개`;
+      row.querySelector('.rdel').dataset.id = e.id;
+      return row;
+    }));
   }
 
   function renderNames() {
@@ -226,6 +244,7 @@
 
     const entry = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, weight, unit: state.unit, y: cd.y, m: cd.m, d: cd.d, amount };
     state.entries.push(entry);
+    recent.push(entry.id);
     state.names[name] = { weight, unit: state.unit };
     save();
     renderNames();
@@ -258,11 +277,14 @@
     el.homeBar.hidden = add;
     el.addView.hidden = !add;
     el.bar.hidden = !add;
+    document.body.classList.toggle('adding', add);
     if (add) { homeScroll = window.scrollY; window.scrollTo(0, 0); showSteps(true); }
     else { renderList(); window.scrollTo(0, homeScroll); document.activeElement && document.activeElement.blur(); }
   }
   function openAdd(key) {
     resetForm();
+    recent = [];
+    renderRecent();
     if (key) {
       const e = state.entries.find((x) => groupKey(x) === key);
       if (e) { el.name.value = e.name; el.weight.value = e.weight; state.unit = e.unit; step = 2; renderUnits(); }
@@ -491,6 +513,11 @@
     save();
     renderUnits();
     renderList();
+  });
+
+  el.recentList.addEventListener('click', (e) => {
+    const del = e.target.closest('.rdel');
+    if (del) deleteEntry(del.dataset.id);
   });
 
   el.list.addEventListener('click', (e) => {

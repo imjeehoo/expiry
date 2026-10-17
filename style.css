@@ -232,6 +232,21 @@ input::-webkit-calendar-picker-indicator { display: none !important; }
 .group-head { padding: 14px 16px 10px; }
 .row { padding: 0 8px 0 16px; }
 
-#bar button { flex: 1; max-width: none; padding: 0; }
+#bar .btns button { flex: 1; max-width: none; padding: 0; }
 #addView .top { padding-bottom: 10px; }
 .step .val, .step .edit { margin-bottom: 12px; }
+
+/* pinned list of this session's entries */
+.bar:has(.recent:not([hidden])) { flex-direction: column; }
+.btns { display: flex; gap: 10px; width: 100%; }
+#bar { flex-direction: column; gap: 8px; }
+.recent { width: 100%; }
+.recent-head { font-size: 12px; font-weight: 500; color: var(--muted); padding: 2px 4px 4px; }
+.recent-list { max-height: 96px; overflow-y: auto; border-radius: 10px; background: var(--card); -webkit-overflow-scrolling: touch; }
+.rrow { display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 2px 0 12px; font-size: 14px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.rrow:last-child { border-bottom: 0; }
+.rrow .rname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.rrow .rmeta { color: var(--muted); flex-shrink: 0; }
+.rrow .rdel { width: 32px; height: 32px; display: grid; place-items: center; color: var(--muted); }
+body.adding .toast { bottom: calc(190px + var(--safe-b)); }
+#bar .rrow .rdel { flex: 0 0 32px; width: 32px; height: 32px; border-radius: 0; font-size: inherit; }
