@@ -202,7 +202,8 @@
 
     const curKey = groupKey({ name: el.name.value.trim(), weight: el.weight.value.trim(), unit: state.unit });
     const frag = document.createDocumentFragment();
-    [...groups.entries()].sort((a, b) => b[1].last - a[1].last).forEach(([k, g]) => {
+    [...groups.entries()].forEach(([k, g]) => { // Map keeps first-entered order
+      g.rows.sort((a, b) => iso(a.y, a.m, a.d).localeCompare(iso(b.y, b.m, b.d)));
       const box = document.createElement('div');
       box.className = 'group' + (k === curKey ? ' current' : '');
       const head = document.createElement('button');
