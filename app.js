@@ -103,6 +103,17 @@
     el.preview.textContent = `${fmtLong.format(new Date(Date.UTC(cd.y, cd.m - 1, cd.d)))} · ${relative(cd.y, cd.m, cd.d)}`;
   }
 
+  // Shows 1000g+ as kg and 1000ml+ as L; the typed value and the export keep g / ml.
+  function fmtWeight(weight, unit) {
+    if (!weight) return '';
+    if (/^\d+([.,]\d+)?$/.test(weight)) {
+      const n = parseFloat(weight.replace(',', '.'));
+      if (n >= 1000 && unit === 'g') return `${+(n / 1000).toFixed(2)}kg`;
+      if (n >= 1000 && unit === 'ml') return `${+(n / 1000).toFixed(2)}L`;
+    }
+    return weight + unit;
+  }
+
   const groupKey = (e) => `${e.name}\u0000${e.weight}\u0000${e.unit}`;
 
   function renderList(flashId) {
@@ -135,7 +146,7 @@
       nm.textContent = g.name;
       const meta = document.createElement('span');
       meta.className = 'gmeta';
-      meta.textContent = `${g.weight ? g.weight + g.unit + ' · ' : ''}총 ${g.total}x`;
+      meta.textContent = `${g.weight ? fmtWeight(g.weight, g.unit) + ' · ' : ''}${g.total}x`;
       head.append(nm, meta);
       box.appendChild(head);
 
@@ -167,7 +178,7 @@
       const row = document.createElement('div');
       row.className = 'rrow';
       row.innerHTML = '<span class="rname"></span><span class="rmeta"></span><button type="button" class="rdel" aria-label="삭제"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>';
-      row.querySelector('.rname').textContent = e.name + (e.weight ? ` ${e.weight}${e.unit}` : '');
+      row.querySelector('.rname').textContent = e.name + (e.weight ? ` ${fmtWeight(e.weight, e.unit)}` : '');
       row.querySelector('.rmeta').textContent = `${iso(e.y, e.m, e.d).slice(2)} · ${e.amount}x`;
       row.querySelector('.rdel').dataset.id = e.id;
       return row;
@@ -208,7 +219,7 @@
 
   function stepText(i) {
     if (i === 0) return el.name.value.trim();
-    if (i === 1) { const w = el.weight.value.trim(); return w ? `${w}${state.unit}` : ''; }
+    if (i === 1) { const w = el.weight.value.trim(); return w ? fmtWeight(w, state.unit) : ''; }
     if (i === 2) { const cd = currentDate(); return cd.complete && cd.valid ? `${cd.y}.${pad(cd.m)}.${pad(cd.d)}` : ''; }
     return el.amount.value ? `${el.amount.value}x` : '';
   }
