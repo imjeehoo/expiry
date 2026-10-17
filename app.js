@@ -4,7 +4,7 @@
   const $ = (id) => document.getElementById(id);
   const el = {
     form: $('form'), name: $('name'), weight: $('weight'), units: $('units'),
-    home: $('home'), addView: $('addView'), homeBar: $('homeBar'), openAdd: $('openAdd'), back: $('back'), done: $('done'), date: $('date'), amount: $('amount'),
+    home: $('home'), addView: $('addView'), homeBar: $('homeBar'), openAdd: $('openAdd'), back: $('back'), done: $('done'), newItem: $('newItem'), date: $('date'), amount: $('amount'),
     preview: $('preview'), list: $('list'), count: $('count'), clear: $('clear'),
     exportBtn: $('export'), importBtn: $('import'), file: $('file'), bar: $('bar'), primary: $('primary'),
     toast: $('toast'), toastText: $('toastText'), toastAction: $('toastAction'), names: $('names'),
@@ -198,15 +198,15 @@
   function showSteps(focus) {
     const act = editing ?? step;
     for (const s of STEPS) {
-      s.box.hidden = s.i > step;
+      s.box.classList.toggle('open', s.i <= step);
       s.box.classList.toggle('active', s.i === act);
       const t = stepText(s.i);
       s.val.textContent = t || PLACEHOLDER[s.i];
       s.val.classList.toggle('empty', !t);
     }
     if (focus) {
-      STEPS[act].input.focus();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      STEPS[act].input.focus({ preventScroll: true });
+      if (window.scrollY) window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     updatePrimary();
   }
@@ -523,6 +523,7 @@
   el.openAdd.addEventListener('click', () => openAdd());
   el.back.addEventListener('click', goHome);
   el.done.addEventListener('click', goHome);
+  el.newItem.addEventListener('click', () => { resetForm(); showSteps(true); });
   window.addEventListener('hashchange', route);
 
   // ---------- keyboard accessory bar ----------

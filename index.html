@@ -42,22 +42,27 @@
     <form id="form" autocomplete="off" novalidate>
       <div id="steps" class="steps">
         <section class="step" id="s-name">
+          <div class="inner">
           <span class="label">이름</span>
           <button type="button" class="val" id="v-name"></button>
           <div class="edit">
             <input id="name" type="text" list="names" placeholder="품목 이름"
                    autocapitalize="sentences" autocorrect="off" spellcheck="false" enterkeyhint="next" aria-label="이름">
           </div>
+          </div>
         </section>
-        <section class="step" id="s-weight" hidden>
+        <section class="step" id="s-weight">
+          <div class="inner">
           <span class="label">무게</span>
           <button type="button" class="val" id="v-weight"></button>
           <div class="edit weight-row">
             <input id="weight" type="text" inputmode="decimal" placeholder="0" enterkeyhint="next" aria-label="무게">
             <div id="units" class="seg" role="radiogroup" aria-label="단위"></div>
           </div>
+          </div>
         </section>
-        <section class="step" id="s-date" hidden>
+        <section class="step" id="s-date">
+          <div class="inner">
           <span class="label">유통기한 · 연 월 일</span>
           <button type="button" class="val" id="v-date"></button>
           <div class="edit">
@@ -65,12 +70,15 @@
                    enterkeyhint="next" aria-label="유통기한">
             <p id="preview" class="preview">&nbsp;</p>
           </div>
+          </div>
         </section>
-        <section class="step" id="s-amount" hidden>
+        <section class="step" id="s-amount">
+          <div class="inner">
           <span class="label">수량</span>
           <button type="button" class="val" id="v-amount"></button>
           <div class="edit">
             <input id="amount" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="1" enterkeyhint="done" aria-label="수량">
+          </div>
           </div>
         </section>
       </div>
@@ -83,6 +91,7 @@
   </div>
 
   <div id="bar" class="bar" hidden>
+    <button id="newItem" class="ghost" type="button">새 품목</button>
     <button id="done" class="ghost" type="button">완료</button>
     <button id="primary" class="primary" type="button">다음</button>
   </div>

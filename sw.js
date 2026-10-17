@@ -1,5 +1,5 @@
 // Offline app shell: network first (so updates land immediately), cache when offline.
-const CACHE = 'expiry-v9';
+const CACHE = 'expiry-v10';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'xlsx.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {
