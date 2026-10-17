@@ -13,7 +13,7 @@ No build step, no dependencies, works offline (PWA). Open `index.html` from any 
 5. **New item** clears everything for the next product. Tap a group in the list to add more dates to it later.
 6. **Export** creates `expiry-YYYY-MM-DD-HHMM.xlsx` (Name, Weight, Unit, Expiry as a real Excel date, Amount). On phones it opens the share sheet, so you can save it to Files or send it.
 
-Date entry tips: digits that can't start a valid number are padded for you (`3` → `03`, `65` → `06.05`), so short dates need fewer keystrokes. Tap the "유통기한 · MM.DD" label to switch to DD.MM.
+Date entry tips: digits that can't start a valid number are padded for you (`3` → `03`, `65` → `06.05`), so short dates need fewer keystrokes. Tap the "유통기한 · YY.MM.DD" label to switch to DD.MM.
 
 Entries are saved in the browser (localStorage) until you clear them. Deleting a row or clearing all can be undone from the toast.
 

@@ -208,3 +208,6 @@ input::-webkit-calendar-picker-indicator { display: none !important; }
 .step.active input { font-size: 30px; font-weight: 600; letter-spacing: -.02em; padding: 6px 0; border-bottom: 2px solid var(--fg); }
 .step.active .weight-row input { flex: 1; }
 .step .preview { padding: 8px 0 0; }
+
+.bar .primary.wide { max-width: none; }
+#back { padding: 0 14px; }

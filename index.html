@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="home">
   <header class="top">
     <h1>유통기한</h1>
     <div class="actions" style="display:flex;gap:8px">
@@ -27,6 +28,17 @@
   </header>
 
   <main>
+    <div class="list-head">
+      <span id="count">기록 없음</span>
+      <button id="clear" class="link" type="button" hidden>모두 삭제</button>
+    </div>
+    <section id="list"></section>
+  </main>
+  </div>
+
+  <div id="addView" hidden>
+    <header class="top"><button id="back" class="pill ghost" type="button">‹ 목록</button></header>
+    <main>
     <form id="form" autocomplete="off" novalidate>
       <div id="steps" class="steps">
         <section class="step" id="s-name">
@@ -45,12 +57,11 @@
             <div id="units" class="seg" role="radiogroup" aria-label="단위"></div>
           </div>
         </section>
-        <div id="years" class="chips" role="radiogroup" aria-label="연도" hidden></div>
         <section class="step" id="s-date" hidden>
-          <span class="label">유통기한 · 월.일</span>
+          <span class="label">유통기한 · 연 월 일</span>
           <button type="button" class="val" id="v-date"></button>
           <div class="edit">
-            <input id="date" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="MM.DD"
+            <input id="date" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="YY.MM.DD"
                    enterkeyhint="next" aria-label="유통기한">
             <p id="preview" class="preview">&nbsp;</p>
           </div>
@@ -64,16 +75,15 @@
         </section>
       </div>
     </form>
+    </main>
+  </div>
 
-    <div class="list-head">
-      <span id="count">기록 없음</span>
-      <button id="clear" class="link" type="button" hidden>모두 삭제</button>
-    </div>
-    <section id="list"></section>
-  </main>
+  <div id="homeBar" class="bar">
+    <button id="openAdd" class="primary wide" type="button">품목 추가</button>
+  </div>
 
   <div id="bar" class="bar" hidden>
-    <button id="newItem" class="ghost" type="button">새 품목</button>
+    <button id="done" class="ghost" type="button">완료</button>
     <button id="primary" class="primary" type="button">다음</button>
   </div>
 

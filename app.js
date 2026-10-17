@@ -4,14 +4,13 @@
   const $ = (id) => document.getElementById(id);
   const el = {
     form: $('form'), name: $('name'), weight: $('weight'), units: $('units'),
-    years: $('years'), date: $('date'), amount: $('amount'),
+    home: $('home'), addView: $('addView'), homeBar: $('homeBar'), openAdd: $('openAdd'), back: $('back'), done: $('done'), date: $('date'), amount: $('amount'),
     preview: $('preview'), list: $('list'), count: $('count'), clear: $('clear'),
-    exportBtn: $('export'), importBtn: $('import'), file: $('file'), bar: $('bar'), primary: $('primary'), newItem: $('newItem'),
+    exportBtn: $('export'), importBtn: $('import'), file: $('file'), bar: $('bar'), primary: $('primary'),
     toast: $('toast'), toastText: $('toastText'), toastAction: $('toastAction'), names: $('names'),
   };
 
   const UNITS = ['g', 'kg', 'ml', 'L'];
-  const LAST_YEAR = 2050;
   const KEY = 'expiry.v1';
 
   // ---------- state ----------
@@ -19,8 +18,6 @@
   state.entries = state.entries || [];
   state.names = state.names || {}; // name -> { weight, unit }
   state.unit = state.unit || 'g';
-  state.order = 'md'; // month first
-  let yearLock = null; // user-picked year, sticky until "New item"
 
   function load() {
     try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; }
@@ -28,7 +25,7 @@
   function save() {
     try {
       localStorage.setItem(KEY, JSON.stringify({
-        entries: state.entries, names: state.names, unit: state.unit, order: state.order,
+        entries: state.entries, names: state.names, unit: state.unit,
       }));
     } catch { /* storage unavailable: keep working in memory */ }
   }
@@ -45,65 +42,20 @@
     return { y: t.getFullYear(), m: t.getMonth() + 1, d: t.getDate() };
   }
 
-  // Turns typed digits into a month/day, auto-padding where the next digit can't
-  // make a valid number ("3" -> "03", "15" as month -> "01" + day "5" -> "05").
-  function parseDigits(digits, order) {
-    const seq = order === 'md' ? ['m', 'd'] : ['d', 'm'];
-    const p = { m: '', d: '' };
-    const max = (k) => (k === 'm' ? 12 : p.m.length === 2 ? DIM[+p.m] : 31);
-    const valid = (k, s) => {
-      const n = +s;
-      if (n < 1) return false;
-      if (k === 'm') return n <= 12 && (p.d.length < 2 || +p.d <= DIM[n]);
-      return n <= max('d');
-    };
-
-    let i = 0;
-    let j = 0;
-    while (j < digits.length && i < 2) {
-      const ch = digits[j];
-      const k = seq[i];
-      const cur = p[k];
-      if (cur === '') {
-        if (+ch > Math.floor(max(k) / 10)) {
-          if (valid(k, '0' + ch)) { p[k] = '0' + ch; i++; }
-        } else {
-          p[k] = ch;
-        }
-        j++;
-      } else if (valid(k, cur + ch)) {
-        p[k] = cur + ch; i++; j++;
-      } else if (i === 0 && valid(k, '0' + cur)) {
-        p[k] = '0' + cur; i++; // re-read ch as the start of the next part
-      } else {
-        j++; // impossible digit, ignore it
-      }
-    }
-
-    const a = p[seq[0]];
-    const b = p[seq[1]];
+  // YYMMDD typed as plain digits -> 20YY-MM-DD, shown as "YY.MM.DD".
+  function parseDigits(digits) {
+    const d = digits.slice(0, 6);
     return {
-      complete: i >= 2,
-      m: +p.m, d: +p.d,
-      display: a + (b ? '.' + b : ''),
+      complete: d.length === 6,
+      y: 2000 + +d.slice(0, 2), m: +d.slice(2, 4), d: +d.slice(4, 6),
+      display: [d.slice(0, 2), d.slice(2, 4), d.slice(4, 6)].filter(Boolean).join('.'),
     };
-  }
-
-  function predictYear(m, d) {
-    const t = today();
-    for (let y = t.y; y <= LAST_YEAR; y++) {
-      if (!realDate(y, m, d)) continue;
-      if (y > t.y || m > t.m || (m === t.m && d >= t.d)) return y;
-    }
-    return t.y;
   }
 
   function currentDate() {
-    const r = parseDigits(el.date.value.replace(/\D/g, ''), state.order);
+    const r = parseDigits(el.date.value.replace(/\D/g, ''));
     if (!r.complete) return { complete: false, empty: el.date.value === '' };
-    const auto = yearLock === null;
-    const y = auto ? predictYear(r.m, r.d) : yearLock;
-    return { complete: true, valid: realDate(y, r.m, r.d), y, m: r.m, d: r.d, auto };
+    return { complete: true, valid: r.m >= 1 && r.m <= 12 && r.d >= 1 && realDate(r.y, r.m, r.d), y: r.y, m: r.m, d: r.d };
   }
 
   function relative(y, m, d) {
@@ -133,40 +85,13 @@
     }
   }
 
-  function renderYears() {
-    const t = today();
-    const cd = currentDate();
-    const selected = yearLock ?? (cd.complete ? cd.y : null);
-    const prev = el.years.scrollLeft;
-    el.years.innerHTML = '';
-    let sel = null;
-    for (let y = t.y; y <= LAST_YEAR; y++) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = y;
-      b.dataset.year = y;
-      b.setAttribute('role', 'radio');
-      b.setAttribute('aria-checked', String(y === selected));
-      if (y === selected && yearLock === null) b.classList.add('auto');
-      if (y === selected) sel = b;
-      el.years.appendChild(b);
-    }
-    el.years.scrollLeft = prev;
-    if (sel) {
-      const L = sel.offsetLeft - el.years.offsetLeft;
-      if (L < el.years.scrollLeft || L + sel.offsetWidth > el.years.scrollLeft + el.years.clientWidth) {
-        el.years.scrollLeft = L - (el.years.clientWidth - sel.offsetWidth) / 2;
-      }
-    }
-  }
-
   function renderPreview(msg) {
     el.preview.classList.remove('err');
     if (msg) { el.preview.textContent = msg; return; }
     const cd = currentDate();
     if (!cd.complete) {
       el.preview.innerHTML = cd.empty && document.activeElement === el.date
-        ? '월, 일 순서로 입력 · 예: 1225'
+        ? '연 월 일 6자리 · 예: 261225'
         : '&nbsp;';
       return;
     }
@@ -175,7 +100,7 @@
       el.preview.textContent = `${iso(cd.y, cd.m, cd.d)} 존재하지 않는 날짜예요`;
       return;
     }
-    el.preview.textContent = `${fmtLong.format(new Date(Date.UTC(cd.y, cd.m - 1, cd.d)))} · ${relative(cd.y, cd.m, cd.d)}${cd.auto ? '' : ' · 연도 고정'}`;
+    el.preview.textContent = `${fmtLong.format(new Date(Date.UTC(cd.y, cd.m - 1, cd.d)))} · ${relative(cd.y, cd.m, cd.d)}`;
   }
 
   const groupKey = (e) => `${e.name}\u0000${e.weight}\u0000${e.unit}`;
@@ -196,12 +121,11 @@
     });
     el.count.textContent = n === 0 ? '기록 없음' : `${n}건 · ${groups.size}개 품목`;
 
-    const curKey = groupKey({ name: el.name.value.trim(), weight: el.weight.value.trim(), unit: state.unit });
     const frag = document.createDocumentFragment();
     [...groups.entries()].forEach(([k, g]) => { // Map keeps first-entered order
       g.rows.sort((a, b) => iso(a.y, a.m, a.d).localeCompare(iso(b.y, b.m, b.d)));
       const box = document.createElement('div');
-      box.className = 'group' + (k === curKey ? ' current' : '');
+      box.className = 'group';
       const head = document.createElement('button');
       head.type = 'button';
       head.className = 'group-head';
@@ -280,7 +204,6 @@
       s.val.textContent = t || PLACEHOLDER[s.i];
       s.val.classList.toggle('empty', !t);
     }
-    el.years.hidden = step < 2;
     if (focus) {
       STEPS[act].input.focus();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -312,23 +235,43 @@
     el.amount.value = '';
     editing = null;
     step = 2;
-    renderYears();
     showSteps(true);
     renderPreview(`✓ ${iso(cd.y, cd.m, cd.d)} · ${amount}개 추가됨`);
   }
 
-  function newItem() {
+  function resetForm() {
     el.name.value = '';
     el.weight.value = '';
     el.date.value = '';
     el.amount.value = '';
-    yearLock = null;
     step = 0;
     editing = null;
-    renderYears();
     renderPreview();
-    renderList();
-    showSteps(true);
+  }
+
+  // ---------- navigation: list is home, adding happens on its own screen ----------
+  let homeScroll = 0;
+  function route() {
+    const add = location.hash === '#add';
+    if (add === !el.addView.hidden) return;
+    el.home.hidden = add;
+    el.homeBar.hidden = add;
+    el.addView.hidden = !add;
+    el.bar.hidden = !add;
+    if (add) { homeScroll = window.scrollY; window.scrollTo(0, 0); showSteps(true); }
+    else { renderList(); window.scrollTo(0, homeScroll); document.activeElement && document.activeElement.blur(); }
+  }
+  function openAdd(key) {
+    resetForm();
+    if (key) {
+      const e = state.entries.find((x) => groupKey(x) === key);
+      if (e) { el.name.value = e.name; el.weight.value = e.weight; state.unit = e.unit; step = 2; renderUnits(); }
+    }
+    location.hash = '#add';
+    route();
+  }
+  function goHome() {
+    if (location.hash === '#add') history.back(); else route();
   }
 
   function next(from) {
@@ -357,21 +300,6 @@
       save();
       renderList(removed.id);
     });
-  }
-
-  function loadGroup(key) {
-    const e = state.entries.find((x) => groupKey(x) === key);
-    if (!e) return;
-    el.name.value = e.name;
-    el.weight.value = e.weight;
-    state.unit = e.unit;
-    yearLock = null;
-    step = 2;
-    editing = null;
-    renderUnits();
-    renderYears();
-    renderList();
-    showSteps(true);
   }
 
   function stamp() {
@@ -511,7 +439,7 @@
   const keepFocus = (e) => {
     if (document.activeElement && document.activeElement.tagName === 'INPUT') e.preventDefault();
   };
-  for (const n of [el.units, el.years, el.bar, el.toast]) n.addEventListener('mousedown', keepFocus);
+  for (const n of [el.units, el.bar, el.toast]) n.addEventListener('mousedown', keepFocus);
 
   el.form.addEventListener('submit', (e) => { e.preventDefault(); addLot(); });
 
@@ -538,9 +466,8 @@
   });
 
   el.date.addEventListener('input', (e) => {
-    const r = parseDigits(el.date.value.replace(/\D/g, ''), state.order);
+    const r = parseDigits(el.date.value.replace(/\D/g, ''));
     el.date.value = r.display;
-    renderYears();
     renderPreview();
     if (r.complete && e.inputType && e.inputType.startsWith('insert')) {
       if (currentDate().valid) next(el.date);
@@ -566,25 +493,11 @@
     renderList();
   });
 
-  el.years.addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (!b) return;
-    const y = +b.dataset.year;
-    yearLock = yearLock === y ? null : y;
-    renderYears();
-    renderPreview();
-    showSteps(false);
-    if ((editing ?? step) === 2) {
-      const cd = currentDate();
-      if (cd.complete && cd.valid) next(el.date); else el.date.focus();
-    }
-  });
-
   el.list.addEventListener('click', (e) => {
     const del = e.target.closest('.rdel');
     if (del) { deleteEntry(del.dataset.id); return; }
     const head = e.target.closest('.group-head');
-    if (head) loadGroup(head.dataset.key);
+    if (head) openAdd(head.dataset.key);
   });
 
   el.clear.addEventListener('click', () => {
@@ -607,14 +520,16 @@
     if (f) importFile(f);
   });
   el.primary.addEventListener('click', () => next(document.activeElement));
-  el.newItem.addEventListener('click', newItem);
+  el.openAdd.addEventListener('click', () => openAdd());
+  el.back.addEventListener('click', goHome);
+  el.done.addEventListener('click', goHome);
+  window.addEventListener('hashchange', route);
 
   // ---------- keyboard accessory bar ----------
   let blurTimer;
   document.addEventListener('focusin', (e) => {
     if (e.target.tagName !== 'INPUT') return;
     clearTimeout(blurTimer);
-    el.bar.hidden = false;
     updatePrimary();
     if (e.target === el.date) renderPreview();
     placeBar();
@@ -622,7 +537,6 @@
   document.addEventListener('focusout', () => {
     blurTimer = setTimeout(() => {
       if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
-      el.bar.hidden = true;
       renderPreview();
     }, 120);
   });
@@ -648,9 +562,8 @@
 
   // ---------- init ----------
   renderUnits();
-  renderYears();
-  showSteps(false);
-  el.name.focus({ preventScroll: true });
+  if (location.hash === '#add') history.replaceState(null, '', location.pathname);
+  route();
   renderNames();
   renderList();
   renderPreview();
@@ -660,5 +573,5 @@
   }
 
   // exposed for tests
-  window.__expiry = { parseDigits, predictYear, rowsToEntries };
+  window.__expiry = { parseDigits, rowsToEntries };
 })();
