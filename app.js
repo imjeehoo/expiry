@@ -177,10 +177,10 @@
     el.recentList.replaceChildren(...rows.map((e) => {
       const row = document.createElement('div');
       row.className = 'rrow';
-      row.innerHTML = '<span class="rname"></span><span class="rmeta"></span><button type="button" class="rdel" aria-label="삭제"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>';
+      row.innerHTML = '<span class="rname"></span><span class="rmeta"></span><button type="button" class="rmenu" aria-label="메뉴"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></svg></button>';
       row.querySelector('.rname').textContent = e.name + (e.weight ? ` ${fmtWeight(e.weight, e.unit)}` : '');
       row.querySelector('.rmeta').textContent = `${iso(e.y, e.m, e.d).slice(2)} · ${e.amount}x`;
-      row.querySelector('.rdel').dataset.id = e.id;
+      row.querySelector('.rmenu').dataset.id = e.id;
       return row;
     }));
   }
@@ -494,6 +494,7 @@
     const e = state.entries.find((x) => x.id === id);
     if (!e) return;
     menuId = id;
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); // close the keyboard
     sh.title.textContent = `${e.name}${e.weight ? ' ' + fmtWeight(e.weight, e.unit) : ''} · ${iso(e.y, e.m, e.d).slice(2)} · ${e.amount}x`;
     sh.menu.hidden = false;
     sh.form.hidden = true;
@@ -507,6 +508,8 @@
     document.body.classList.remove('sheet-open');
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     menuId = null;
+    // back on the add screen, carry on typing where the user left off
+    if (!el.addView.hidden) setTimeout(() => STEPS[editing ?? step].input.focus({ preventScroll: true }), 0);
   }
 
   function openEdit() {
@@ -629,8 +632,8 @@
   });
 
   el.recentList.addEventListener('click', (e) => {
-    const del = e.target.closest('.rdel');
-    if (del) deleteEntry(del.dataset.id);
+    const menu = e.target.closest('.rmenu');
+    if (menu) openMenu(menu.dataset.id);
   });
 
   el.list.addEventListener('click', (e) => {

@@ -247,9 +247,9 @@ input::-webkit-calendar-picker-indicator { display: none !important; }
 .rrow:last-child { border-bottom: 0; }
 .rrow .rname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
 .rrow .rmeta { color: var(--muted); flex-shrink: 0; }
-.rrow .rdel { width: 32px; height: 32px; display: grid; place-items: center; color: var(--muted); }
+.rrow .rdel, .rrow .rmenu { width: 32px; height: 32px; display: grid; place-items: center; color: var(--muted); }
 body.adding .toast { bottom: calc(var(--bar-h, 190px) + 12px + var(--safe-b)); }
-#bar .rrow .rdel { flex: 0 0 32px; width: 32px; height: 32px; border-radius: 0; font-size: inherit; }
+#bar .rrow .rdel, #bar .rrow .rmenu { flex: 0 0 32px; width: 32px; height: 32px; border-radius: 0; font-size: inherit; }
 
 /* SF Mono for figures: dates, weights, quantities */
 #weight, #date, #amount, .row .rdate, .row .rqty, .gmeta, .rrow .rmeta, .step .val.num, .chips button { font-family: var(--mono); letter-spacing: 0; }
