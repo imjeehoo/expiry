@@ -292,6 +292,7 @@
     document.body.classList.toggle('adding', add);
     if (add) { homeScroll = window.scrollY; window.scrollTo(0, 0); showSteps(true); }
     else { renderList(); window.scrollTo(0, homeScroll); document.activeElement && document.activeElement.blur(); }
+    setBarHeight();
   }
   function openAdd(key) {
     resetForm();
@@ -598,6 +599,13 @@
     vv.addEventListener('resize', placeBar);
     vv.addEventListener('scroll', placeBar);
   }
+
+  // Keeps page bottom padding equal to whichever bottom bar is showing, so content never hides behind it.
+  function setBarHeight() {
+    const bar = el.addView.hidden ? el.homeBar : el.bar;
+    document.documentElement.style.setProperty('--bar-h', bar.offsetHeight + 'px');
+  }
+  if ('ResizeObserver' in window) new ResizeObserver(setBarHeight).observe(el.bar), new ResizeObserver(setBarHeight).observe(el.homeBar);
 
   // ---------- init ----------
   renderUnits();

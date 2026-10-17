@@ -1,5 +1,5 @@
 // Offline app shell: network first (so updates land immediately), cache when offline.
-const CACHE = 'expiry-v20';
+const CACHE = 'expiry-v21';
 const FONTS = 'expiry-fonts';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'xlsx.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
