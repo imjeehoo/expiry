@@ -163,7 +163,7 @@ input::-webkit-calendar-picker-indicator { display: none !important; }
 }
 .row .rdate { flex: 1; }
 .row .rqty { color: var(--muted); }
-.row .rdel { width: 36px; height: 36px; display: grid; place-items: center; color: var(--muted); border-radius: 18px; }
+.row .rmenu, .row .rdel { width: 36px; height: 36px; display: grid; place-items: center; color: var(--muted); border-radius: 18px; }
 .row.flash { animation: flash .6s ease-out; }
 @keyframes flash { from { background: var(--chip); } to { background: transparent; } }
 
@@ -297,3 +297,34 @@ body.adding .toast { bottom: calc(var(--bar-h, 190px) + 12px + var(--safe-b)); }
   .rrow { padding-left: 10px; }
   .row { padding-left: 12px; }
 }
+
+/* row menu sheet */
+.sheet { position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+.scrim { position: absolute; inset: 0; background: rgba(0,0,0,.35); animation: fade .2s ease-out; }
+.panel {
+  position: relative; width: 100%; max-width: 560px;
+  background: var(--bg); border-radius: 18px 18px 0 0;
+  padding: 18px 16px calc(14px + var(--safe-b));
+  animation: sheetup .26s cubic-bezier(.2,.8,.2,1);
+  will-change: transform;
+}
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sheetup { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.sheet-title { font-size: 15px; font-weight: 600; text-align: center; color: var(--muted); padding: 0 8px 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu { display: flex; flex-direction: column; gap: 8px; }
+.menu button { height: 52px; border-radius: 14px; background: var(--card); font-size: 17px; font-weight: 600; }
+.menu .danger { color: var(--danger); }
+.menu .cancel { background: transparent; color: var(--muted); font-weight: 500; }
+.edit-form .ef { display: flex; flex-direction: column; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.edit-form .label { margin-bottom: 4px; }
+.edit-form input { font-size: 22px; font-weight: 600; height: 40px; padding: 0; }
+.edit-form #eWeight, .edit-form #eAmount { font-family: var(--mono); font-weight: 500; }
+.edit-form .weight-row { display: flex; align-items: center; gap: 12px; }
+.edit-form .weight-row input { flex: 1; }
+.ef-note { margin: 10px 2px 12px; font-size: 13px; color: var(--muted); }
+.edit-form .btns { display: flex; gap: 10px; }
+.edit-form .btns button { flex: 1; height: 48px; border-radius: 12px; font-weight: 600; font-size: 16px; }
+.edit-form .ghost { background: var(--chip); }
+.edit-form .primary { background: var(--fg); color: var(--invert-fg); }
+body.sheet-open { overflow: hidden; }
+@media (max-height: 480px) { .panel { padding-top: 12px; } .sheet-title { padding-bottom: 8px; } .menu button { height: 44px; } }

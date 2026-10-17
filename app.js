@@ -155,10 +155,10 @@
         row.className = 'row' + (e.id === flashId ? ' flash' : '');
         row.innerHTML =
           `<span class="rdate"></span><span class="rqty"></span>` +
-          `<button type="button" class="rdel" aria-label="삭제"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>`;
+          `<button type="button" class="rmenu" aria-label="메뉴"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></svg></button>`;
         row.querySelector('.rdate').textContent = iso(e.y, e.m, e.d);
         row.querySelector('.rqty').textContent = `${e.amount}x`;
-        row.querySelector('.rdel').dataset.id = e.id;
+        row.querySelector('.rmenu').dataset.id = e.id;
         box.appendChild(row);
       }
       frag.appendChild(box);
@@ -469,6 +469,106 @@
     }
   }
 
+  // ---------- row menu: edit / delete ----------
+  const sh = {
+    sheet: $('sheet'), scrim: $('scrim'), panel: $('panel'), title: $('sheetTitle'),
+    menu: $('menuView'), form: $('editView'), name: $('eName'), weight: $('eWeight'),
+    amount: $('eAmount'), units: $('eUnits'),
+  };
+  let menuId = null;
+  let editUnit = 'g';
+
+  function renderEditUnits() {
+    sh.units.replaceChildren(...UNITS.map((u) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = u;
+      b.dataset.unit = u;
+      b.setAttribute('role', 'radio');
+      b.setAttribute('aria-checked', String(u === editUnit));
+      return b;
+    }));
+  }
+
+  function openMenu(id) {
+    const e = state.entries.find((x) => x.id === id);
+    if (!e) return;
+    menuId = id;
+    sh.title.textContent = `${e.name}${e.weight ? ' ' + fmtWeight(e.weight, e.unit) : ''} · ${iso(e.y, e.m, e.d).slice(2)} · ${e.amount}x`;
+    sh.menu.hidden = false;
+    sh.form.hidden = true;
+    sh.sheet.hidden = false;
+    document.body.classList.add('sheet-open');
+  }
+
+  function closeMenu() {
+    sh.sheet.hidden = true;
+    sh.panel.style.transform = '';
+    document.body.classList.remove('sheet-open');
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    menuId = null;
+  }
+
+  function openEdit() {
+    const e = state.entries.find((x) => x.id === menuId);
+    if (!e) return closeMenu();
+    sh.name.value = e.name;
+    sh.weight.value = e.weight;
+    sh.amount.value = String(e.amount);
+    editUnit = e.unit;
+    renderEditUnits();
+    sh.menu.hidden = true;
+    sh.form.hidden = false;
+    sh.name.focus();
+    sh.name.select();
+  }
+
+  function saveEdit() {
+    const e = state.entries.find((x) => x.id === menuId);
+    if (!e) return closeMenu();
+    const name = sh.name.value.trim();
+    if (!name) { sh.name.focus(); shake(sh.name.closest('.ef')); return; }
+    const weight = sh.weight.value.trim();
+    const amount = parseInt(sh.amount.value, 10) || 1;
+    const oldKey = groupKey(e);
+    // name / weight describe the whole item, so they follow all of its dates; count is per date
+    for (const x of state.entries) {
+      if (groupKey(x) === oldKey) { x.name = name; x.weight = weight; x.unit = editUnit; }
+    }
+    e.amount = amount;
+    state.names[name] = { weight, unit: editUnit };
+    save();
+    renderNames();
+    renderList(e.id);
+    closeMenu();
+    toast('수정됨');
+  }
+
+  sh.scrim.addEventListener('click', closeMenu);
+  $('menuCancel').addEventListener('click', closeMenu);
+  $('eCancel').addEventListener('click', closeMenu);
+  $('menuEdit').addEventListener('click', openEdit);
+  $('menuDelete').addEventListener('click', () => { const id = menuId; closeMenu(); deleteEntry(id); });
+  sh.form.addEventListener('submit', (ev) => { ev.preventDefault(); saveEdit(); });
+  sh.name.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && !ev.isComposing) { ev.preventDefault(); sh.weight.focus(); } });
+  sh.weight.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && !ev.isComposing) { ev.preventDefault(); sh.amount.focus(); } });
+  sh.weight.addEventListener('input', () => {
+    const v = sh.weight.value.replace(/[^\d.,]/g, '');
+    if (v !== sh.weight.value) sh.weight.value = v;
+  });
+  sh.amount.addEventListener('input', () => {
+    const v = sh.amount.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 6);
+    if (v !== sh.amount.value) sh.amount.value = v;
+  });
+  sh.units.addEventListener('mousedown', (ev) => ev.preventDefault());
+  sh.units.addEventListener('click', (ev) => {
+    const b = ev.target.closest('button');
+    if (!b) return;
+    editUnit = b.dataset.unit;
+    renderEditUnits();
+  });
+  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !sh.sheet.hidden) closeMenu(); });
+
   // ---------- events ----------
   // Keep the keyboard up when tapping chips/buttons while typing.
   const keepFocus = (e) => {
@@ -534,8 +634,8 @@
   });
 
   el.list.addEventListener('click', (e) => {
-    const del = e.target.closest('.rdel');
-    if (del) { deleteEntry(del.dataset.id); return; }
+    const menu = e.target.closest('.rmenu');
+    if (menu) { openMenu(menu.dataset.id); return; }
     const head = e.target.closest('.group-head');
     if (head) openAdd(head.dataset.key);
   });
@@ -587,6 +687,7 @@
     const offset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
     el.bar.style.transform = offset ? `translateY(${-offset}px)` : '';
     el.bar.classList.toggle('kb', offset > 40);
+    if (!sh.sheet.hidden) sh.panel.style.transform = offset ? `translateY(${-offset}px)` : '';
     // keep the focused field clear of the bar
     const a = document.activeElement;
     if (a && a.tagName === 'INPUT') {

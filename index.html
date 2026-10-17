@@ -109,6 +109,34 @@
     <button id="toastAction" class="link" type="button" hidden>되돌리기</button>
   </div>
 
+  <div id="sheet" class="sheet" hidden>
+    <div id="scrim" class="scrim"></div>
+    <div id="panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div id="sheetTitle" class="sheet-title"></div>
+      <div id="menuView" class="menu">
+        <button id="menuEdit" type="button">수정</button>
+        <button id="menuDelete" type="button" class="danger">삭제</button>
+        <button id="menuCancel" type="button" class="cancel">취소</button>
+      </div>
+      <form id="editView" class="edit-form" autocomplete="off" novalidate hidden>
+        <label class="ef"><span class="label">이름</span>
+          <input id="eName" type="text" autocapitalize="sentences" autocorrect="off" spellcheck="false" enterkeyhint="next"></label>
+        <div class="ef"><label class="label" for="eWeight">무게</label>
+          <div class="weight-row">
+            <input id="eWeight" type="text" inputmode="decimal" placeholder="0" enterkeyhint="next">
+            <div id="eUnits" class="seg" role="radiogroup" aria-label="단위"></div>
+          </div></div>
+        <label class="ef"><span class="label">수량</span>
+          <input id="eAmount" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="1x" enterkeyhint="done"></label>
+        <p class="ef-note">이름과 무게는 이 품목의 모든 날짜에 적용돼요.</p>
+        <div class="btns">
+          <button id="eCancel" type="button" class="ghost">취소</button>
+          <button id="eSave" type="submit" class="primary">저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <datalist id="names"></datalist>
 
   <script src="xlsx.js"></script>
