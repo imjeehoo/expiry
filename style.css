@@ -98,9 +98,13 @@ input::-webkit-calendar-picker-indicator { display: none !important; }
 }
 .seg button[aria-checked="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 
-.chips { display: flex; gap: 6px; padding: 12px 0 6px; }
+.chips {
+  display: flex; gap: 6px; padding: 12px 14px 6px; margin: 0 -14px;
+  overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.chips::-webkit-scrollbar { display: none; }
 .chips button {
-  flex: 1 1 0; min-width: 0; height: 38px; padding: 0; border-radius: 19px;
+  flex: 0 0 auto; min-width: 66px; height: 38px; padding: 0 12px; border-radius: 19px;
   background: var(--chip); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;
   transition: background .12s, color .12s;
 }

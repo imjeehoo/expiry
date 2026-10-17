@@ -11,7 +11,7 @@
   };
 
   const UNITS = ['g', 'kg', 'ml', 'L'];
-  const YEARS_AHEAD = 5;
+  const LAST_YEAR = 2050;
   const KEY = 'expiry.v1';
 
   // ---------- state ----------
@@ -19,7 +19,7 @@
   state.entries = state.entries || [];
   state.names = state.names || {}; // name -> { weight, unit }
   state.unit = state.unit || 'g';
-  state.order = state.order || 'md';
+  state.order = 'md'; // month first
   let yearLock = null; // user-picked year, sticky until "New item"
 
   function load() {
@@ -91,7 +91,7 @@
 
   function predictYear(m, d) {
     const t = today();
-    for (let y = t.y; y <= t.y + YEARS_AHEAD; y++) {
+    for (let y = t.y; y <= LAST_YEAR; y++) {
       if (!realDate(y, m, d)) continue;
       if (y > t.y || m > t.m || (m === t.m && d >= t.d)) return y;
     }
@@ -137,8 +137,10 @@
     const t = today();
     const cd = currentDate();
     const selected = yearLock ?? (cd.complete ? cd.y : null);
+    const prev = el.years.scrollLeft;
     el.years.innerHTML = '';
-    for (let y = t.y; y <= t.y + YEARS_AHEAD; y++) {
+    let sel = null;
+    for (let y = t.y; y <= LAST_YEAR; y++) {
       const b = document.createElement('button');
       b.type = 'button';
       b.textContent = y;
@@ -146,14 +148,20 @@
       b.setAttribute('role', 'radio');
       b.setAttribute('aria-checked', String(y === selected));
       if (y === selected && yearLock === null) b.classList.add('auto');
+      if (y === selected) sel = b;
       el.years.appendChild(b);
+    }
+    el.years.scrollLeft = prev;
+    if (sel) {
+      const L = sel.offsetLeft - el.years.offsetLeft;
+      if (L < el.years.scrollLeft || L + sel.offsetWidth > el.years.scrollLeft + el.years.clientWidth) {
+        el.years.scrollLeft = L - (el.years.clientWidth - sel.offsetWidth) / 2;
+      }
     }
   }
 
   function renderOrder() {
-    const f = state.order === 'md' ? 'MM.DD' : 'DD.MM';
-    el.order.textContent = `Expiry · ${f}`;
-    el.date.placeholder = f;
+    el.date.placeholder = 'MM.DD';
   }
 
   function renderPreview(msg) {
@@ -338,15 +346,15 @@
   async function exportXlsx() {
     if (!state.entries.length) return;
     const rows = [['Name', 'Weight', 'Unit', 'Expiry', 'Amount']];
-    for (const e of state.entries) {
-      const w = e.weight.replace(',', '.');
-      rows.push([
-        e.name,
-        /^\d+(\.\d+)?$/.test(w) ? parseFloat(w) : e.weight,
-        e.weight ? e.unit : '',
-        { date: [e.y, e.m, e.d] },
-        e.amount,
-      ]);
+    const sorted = [...state.entries].sort((a, b) =>
+      iso(a.y, a.m, a.d).localeCompare(iso(b.y, b.m, b.d)) || a.name.localeCompare(b.name));
+    for (const e of sorted) {
+      let w = parseFloat(e.weight.replace(',', '.'));
+      const numeric = /^\d+([.,]\d+)?$/.test(e.weight);
+      let unit = e.weight ? e.unit : '';
+      if (numeric && unit === 'kg') { w = Math.round(w * 1000 * 100) / 100; unit = 'g'; }
+      else if (numeric && unit === 'L') { w = Math.round(w * 1000 * 100) / 100; unit = 'ml'; }
+      rows.push([e.name, numeric ? w : e.weight, unit, { date: [e.y, e.m, e.d] }, e.amount]);
     }
     const blob = XLSX.build(rows, { sheetName: 'Expiry', widths: [32, 10, 7, 13, 9] });
     const filename = `expiry-${stamp()}.xlsx`;
@@ -530,16 +538,6 @@
       const cd = currentDate();
       if (cd.complete && cd.valid) el.amount.focus(); else el.date.focus();
     }
-  });
-
-  el.order.addEventListener('click', () => {
-    state.order = state.order === 'md' ? 'dm' : 'md';
-    save();
-    el.date.value = '';
-    renderOrder();
-    renderYears();
-    renderPreview();
-    el.date.focus();
   });
 
   el.list.addEventListener('click', (e) => {
