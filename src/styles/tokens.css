@@ -1,0 +1,29 @@
+:root {
+  --bg: #ffffff;
+  --card: #f5f5f7;
+  --fg: #000000;
+  --muted: #8e8e93;
+  --line: #e5e5ea;
+  --chip: #e9e9ee;
+  --invert-fg: #ffffff;
+  --danger: #ff3b30;
+  --radius: 14px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --max-w: 960px;
+  --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Segoe UI", Roboto, sans-serif;
+  --mono: "SF Mono", SFMono, "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --card: #1c1c1e;
+    --fg: #ffffff;
+    --muted: #8e8e93;
+    --line: #2c2c2e;
+    --chip: #2c2c2e;
+    --invert-fg: #000000;
+    --danger: #ff453a;
+  }
+}

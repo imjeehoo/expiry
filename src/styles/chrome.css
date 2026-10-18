@@ -1,0 +1,56 @@
+/* shared chrome: header, pills, segmented control, bottom bar, toast */
+
+.top {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0 10px;
+  background: var(--bg);
+}
+.top h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.02em; }
+.actions { display: flex; gap: 8px; }
+
+.pill {
+  height: 34px; padding: 0 16px; border-radius: 17px;
+  background: var(--fg); color: var(--invert-fg);
+  font-size: 15px; font-weight: 600;
+}
+.pill.ghost { background: var(--chip); color: var(--fg); }
+.pill:active { opacity: .6; }
+/* the file input covers the whole pill so a tap anywhere opens the picker */
+.file-pill { position: relative; display: inline-flex; align-items: center; cursor: pointer; overflow: hidden; }
+.file-pill input { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; opacity: 0; font-size: 0; cursor: pointer; }
+
+.icon-btn { width: 36px; height: 36px; display: grid; place-items: center; color: var(--muted); border-radius: 18px; }
+
+.seg { display: flex; background: var(--chip); border-radius: 9px; padding: 2px; flex-shrink: 0; }
+.seg button { min-width: 40px; height: 30px; padding: 0 8px; border-radius: 7px; font-size: 14px; font-weight: 600; color: var(--muted); }
+.seg button[aria-checked="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+.bar {
+  position: fixed; bottom: 0; z-index: 10;
+  left: max(0px, calc(50% - var(--max-w) / 2)); right: max(0px, calc(50% - var(--max-w) / 2));
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 8px 16px calc(8px + var(--safe-b));
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid var(--line);
+  will-change: transform;
+}
+.bar.kb { padding-bottom: 8px; } /* the keyboard already covers the home indicator */
+.bar button { height: 44px; border-radius: 12px; font-weight: 600; font-size: 16px; }
+.bar .ghost { background: var(--chip); }
+.bar .primary { background: var(--fg); color: var(--invert-fg); }
+.btns { display: flex; gap: 10px; width: 100%; }
+.btns button { flex: 1; }
+.bar > .primary.wide { width: 100%; }
+
+.toast {
+  position: fixed; left: 0; right: 0; margin: 0 auto; width: max-content; max-width: calc(100% - 32px);
+  bottom: calc(var(--bar-h, 80px) + 12px + var(--safe-b)); z-index: 20;
+  display: flex; gap: 16px; align-items: center;
+  padding: 10px 16px; border-radius: 12px;
+  background: var(--fg); color: var(--invert-fg); font-size: 15px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.18);
+}
+.toast-action { color: var(--invert-fg); font-weight: 600; text-decoration: underline; }

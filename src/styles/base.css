@@ -1,0 +1,35 @@
+[hidden] { display: none !important; }
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body { margin: 0; background: var(--bg); color: var(--fg); }
+
+body {
+  font: 17px/1.35 var(--font);
+  -webkit-font-smoothing: antialiased;
+  /* bottom padding follows the fixed bar (published as --bar-h) so content never hides behind it */
+  padding: env(safe-area-inset-top, 0px) 16px calc(var(--bar-h, 96px) + var(--safe-b));
+  max-width: var(--max-w);
+  margin: 0 auto;
+  overscroll-behavior-y: none;
+}
+body.sheet-open { overflow: hidden; }
+
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; }
+button:disabled { opacity: .35; cursor: default; }
+
+input {
+  font: inherit; font-size: 20px; font-weight: 500;
+  color: var(--fg); background: transparent;
+  border: 0; outline: 0; padding: 4px 0; width: 100%; min-width: 0;
+  border-radius: 0; -webkit-appearance: none; appearance: none;
+  caret-color: var(--fg);
+}
+input::placeholder { color: var(--muted); opacity: .55; font-weight: 400; }
+input::-webkit-calendar-picker-indicator { display: none !important; }
+
+/* figures (dates, weights, quantities) use the monospace face */
+.mono { font-family: var(--mono); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+input.mono { font-weight: 500; }
+
+.label { font-size: 13px; font-weight: 500; color: var(--muted); }

@@ -1,0 +1,22 @@
+/* home: list of items */
+
+.list-head { display: flex; justify-content: space-between; align-items: baseline; padding: 18px 4px 10px; font-size: 13px; color: var(--muted); }
+.link-danger { font-size: 13px; font-weight: 600; color: var(--danger); }
+
+/* 1 column on phones, up to 3 on wide screens (and 2 across a foldable's hinge) */
+.list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 12px; align-items: start; }
+.empty { grid-column: 1 / -1; text-align: center; color: var(--muted); font-size: 15px; padding: 28px 0; }
+
+.group { background: var(--card); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; }
+.group-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  width: 100%; padding: 14px 16px 10px; text-align: left;
+}
+.gname { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gmeta { font-size: 13px; color: var(--muted); flex-shrink: 0; }
+
+.row { display: flex; align-items: center; gap: 12px; padding: 0 8px 0 16px; height: 44px; border-top: 1px solid var(--line); }
+.rdate { flex: 1; font-size: 16px; }
+.rqty { color: var(--muted); }
+.row.flash { animation: flash .6s ease-out; }
+@keyframes flash { from { background: var(--chip); } to { background: transparent; } }

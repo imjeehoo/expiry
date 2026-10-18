@@ -10,136 +10,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="유통기한">
   <title>유통기한</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon-180.png">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sf-mono-webfont@1.0.0/stylesheet.min.css">
-  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="home">
-  <header class="top">
-    <h1>유통기한</h1>
-    <div class="actions" style="display:flex;gap:8px">
-      <label id="import" class="pill ghost" role="button" style="position:relative;display:inline-flex;align-items:center;overflow:hidden">가져오기
-        <input id="file" type="file" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-      </label>
-      <button id="export" class="pill" type="button" disabled>내보내기</button>
-    </div>
-  </header>
-
-  <main>
-    <div class="list-head">
-      <span id="count">기록 없음</span>
-      <button id="clear" class="link" type="button" hidden>모두 삭제</button>
-    </div>
-    <section id="list"></section>
-  </main>
-  </div>
-
-  <div id="addView" hidden>
-    <header class="top"><button id="back" class="pill ghost" type="button">‹ 목록</button></header>
-    <main>
-    <form id="form" autocomplete="off" novalidate>
-      <div id="steps" class="steps">
-        <section class="step" id="s-name">
-          <div class="inner">
-          <span class="label">이름</span>
-          <button type="button" class="val" id="v-name"></button>
-          <div class="edit">
-            <input id="name" type="text" list="names" placeholder="품목 이름"
-                   autocapitalize="sentences" autocorrect="off" spellcheck="false" enterkeyhint="next" aria-label="이름">
-          </div>
-          </div>
-        </section>
-        <section class="step" id="s-weight">
-          <div class="inner">
-          <span class="label">무게</span>
-          <button type="button" class="val" id="v-weight"></button>
-          <div class="edit weight-row">
-            <input id="weight" type="text" inputmode="decimal" placeholder="0" enterkeyhint="next" aria-label="무게">
-            <div id="units" class="seg" role="radiogroup" aria-label="단위"></div>
-          </div>
-          </div>
-        </section>
-        <section class="step" id="s-date">
-          <div class="inner">
-          <span class="label">유통기한 · 연 월 일</span>
-          <button type="button" class="val" id="v-date"></button>
-          <div class="edit">
-            <input id="date" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="YY.MM.DD"
-                   enterkeyhint="next" aria-label="유통기한">
-            <p id="preview" class="preview">&nbsp;</p>
-          </div>
-          </div>
-        </section>
-        <section class="step" id="s-amount">
-          <div class="inner">
-          <span class="label">수량</span>
-          <button type="button" class="val" id="v-amount"></button>
-          <div class="edit">
-            <input id="amount" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="1x" enterkeyhint="done" aria-label="수량">
-          </div>
-          </div>
-        </section>
-      </div>
-    </form>
-    </main>
-  </div>
-
-  <div id="homeBar" class="bar">
-    <button id="openAdd" class="primary wide" type="button">품목 추가</button>
-  </div>
-
-  <div id="bar" class="bar" hidden>
-    <div id="recent" class="recent" hidden>
-      <div id="recentHead" class="recent-head"></div>
-      <div id="recentList" class="recent-list"></div>
-    </div>
-    <div class="btns">
-      <button id="newItem" class="ghost" type="button">새 품목</button>
-      <button id="primary" class="primary" type="button">다음</button>
-    </div>
-  </div>
-
-  <div id="toast" class="toast" role="status" aria-live="polite" hidden>
-    <span id="toastText"></span>
-    <button id="toastAction" class="link" type="button" hidden>되돌리기</button>
-  </div>
-
-  <div id="sheet" class="sheet" hidden>
-    <div id="scrim" class="scrim"></div>
-    <div id="panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-      <div id="sheetTitle" class="sheet-title"></div>
-      <div id="menuView" class="menu">
-        <button id="menuEdit" type="button">수정</button>
-        <button id="menuDelete" type="button" class="danger">삭제</button>
-        <button id="menuCancel" type="button" class="cancel">취소</button>
-      </div>
-      <form id="editView" class="edit-form" autocomplete="off" novalidate hidden>
-        <label class="ef"><span class="label">이름</span>
-          <input id="eName" type="text" autocapitalize="sentences" autocorrect="off" spellcheck="false" enterkeyhint="next"></label>
-        <div class="ef"><label class="label" for="eWeight">무게</label>
-          <div class="weight-row">
-            <input id="eWeight" type="text" inputmode="decimal" placeholder="0" enterkeyhint="next">
-            <div id="eUnits" class="seg" role="radiogroup" aria-label="단위"></div>
-          </div></div>
-        <label class="ef"><span class="label">수량</span>
-          <input id="eAmount" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="1x" enterkeyhint="done"></label>
-        <p class="ef-note">이름과 무게는 이 품목의 모든 날짜에 적용돼요.</p>
-        <div class="btns">
-          <button id="eCancel" type="button" class="ghost">취소</button>
-          <button id="eSave" type="submit" class="primary">저장</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <datalist id="names"></datalist>
-
-  <script src="xlsx.js"></script>
-  <script src="app.js"></script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
